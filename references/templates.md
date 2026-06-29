@@ -1,0 +1,410 @@
+# Templates (模板)
+
+Starter graph skeletons you can adapt, then complete with the patterns in
+`SKILL.md` and the node schemas in `node-schemas.md`. All target
+`version: "0.6.0"`. Replace model providers, dataset IDs, and tool identifiers
+with values exported from your target Dify workspace before importing.
+
+## How to use (使用方法)
+
+1. Pick the closest template by matching condition.
+2. Copy the YAML block, rename the app, and adjust `model`, prompts, IDs.
+3. Validate with `python3 scripts/validate_dsl.py <file.yml>`.
+
+## Node ID and layout conventions
+
+- Node `id`: 13-digit timestamp string, quoted (e.g. `"1711536487001"`). Increment
+  by a few thousand between nodes to mimic real IDs.
+- Start position `{x: 80, y: 282}`; each subsequent column `x + 300`; parallel
+  branches offset `y + 200`.
+- Edge `id`: `{source}-source-{target}-target`. Linear edges use
+  `sourceHandle: source`, `targetHandle: target`.
+- Every edge carries `data.sourceType`/`data.targetType` matching the endpoint
+  node `data.type`, plus `isInIteration`/`isInLoop`.
+
+---
+
+## 1. Chatbot (简单对话机器人)
+
+**Match when:** a single assistant answers `sys.query` with no retrieval or tools.
+
+Shape: `Start -> LLM -> Answer` (advanced-chat).
+
+```yaml
+version: "0.6.0"
+kind: app
+app:
+  name: "Simple Chatbot"
+  mode: advanced-chat
+  description: "A minimal chatbot: Start -> LLM -> Answer."
+  icon: "🤖"
+  icon_type: emoji
+  icon_background: "#FFEAD5"
+  use_icon_as_answer_icon: false
+dependencies: []
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload: { enabled: false }
+    opening_statement: "Hello! How can I help you today?"
+    retriever_resource: { enabled: false }
+    sensitive_word_avoidance: { enabled: false }
+    speech_to_text: { enabled: false }
+    suggested_questions: []
+    suggested_questions_after_answer: { enabled: false }
+    text_to_speech: { enabled: false }
+  graph:
+    nodes:
+      - id: "1711536487001"
+        type: custom
+        position: { x: 80, y: 282 }
+        data:
+          type: start
+          title: "Start"
+          variables: []
+      - id: "1711536522001"
+        type: custom
+        position: { x: 380, y: 282 }
+        data:
+          type: llm
+          title: "LLM"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0.7 }
+          prompt_template:
+            - { role: system, text: "You are a helpful assistant." }
+            - { role: user, text: "{{#sys.query#}}" }
+          context: { enabled: false, variable_selector: [] }
+          memory:
+            query_prompt_template: "{{#sys.query#}}"
+            window: { enabled: false, size: 10 }
+          vision: { enabled: false }
+      - id: "1711536558001"
+        type: custom
+        position: { x: 680, y: 282 }
+        data:
+          type: answer
+          title: "Answer"
+          answer: "{{#1711536522001.text#}}"
+          variables: []
+    edges:
+      - id: "1711536487001-source-1711536522001-target"
+        source: "1711536487001"
+        sourceHandle: source
+        target: "1711536522001"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+        data: { sourceType: start, targetType: llm, isInIteration: false, isInLoop: false }
+      - id: "1711536522001-source-1711536558001-target"
+        source: "1711536522001"
+        sourceHandle: source
+        target: "1711536558001"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+        data: { sourceType: llm, targetType: answer, isInIteration: false, isInLoop: false }
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+```
+
+---
+
+## 2. RAG (知识库问答)
+
+**Match when:** answers must be grounded in a knowledge base; user asks a question
+and the assistant cites retrieved context.
+
+Shape: `Start -> Knowledge Retrieval -> LLM (context enabled) -> Answer`.
+
+```yaml
+version: "0.6.0"
+kind: app
+app:
+  name: "RAG Chatbot"
+  mode: advanced-chat
+  description: "Retrieve from a knowledge base and answer with grounded context."
+  icon: "📚"
+  icon_type: emoji
+  icon_background: "#E4FBCC"
+  use_icon_as_answer_icon: false
+dependencies: []
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload: { enabled: false }
+    opening_statement: "Ask me anything about the knowledge base."
+    retriever_resource: { enabled: true }
+    sensitive_word_avoidance: { enabled: false }
+    speech_to_text: { enabled: false }
+    suggested_questions: []
+    suggested_questions_after_answer: { enabled: false }
+    text_to_speech: { enabled: false }
+  graph:
+    nodes:
+      - id: "1711536487001"
+        type: custom
+        position: { x: 80, y: 282 }
+        data: { type: start, title: "Start", variables: [] }
+      - id: "1711536600001"
+        type: custom
+        position: { x: 380, y: 282 }
+        data:
+          type: knowledge-retrieval
+          title: "Knowledge Retrieval"
+          dataset_ids: ["REPLACE_WITH_DATASET_ID"]
+          query_variable_selector: ["sys", query]
+          retrieval_mode: multiple
+          multiple_retrieval_config:
+            top_k: 4
+            reranking_enable: false
+            score_threshold_enabled: false
+            score_threshold: 0
+          metadata_filtering_mode: disabled
+      - id: "1711536522001"
+        type: custom
+        position: { x: 680, y: 282 }
+        data:
+          type: llm
+          title: "LLM"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0.3 }
+          prompt_template:
+            - { role: system, text: "Answer the user's question using only the provided context. If the context is insufficient, say you don't know." }
+            - { role: user, text: "{{#sys.query#}}" }
+          context:
+            enabled: true
+            variable_selector: ["1711536600001", result]
+          memory:
+            query_prompt_template: "{{#sys.query#}}"
+            window: { enabled: false, size: 10 }
+          vision: { enabled: false }
+      - id: "1711536558001"
+        type: custom
+        position: { x: 980, y: 282 }
+        data:
+          type: answer
+          title: "Answer"
+          answer: "{{#1711536522001.text#}}"
+          variables: []
+    edges:
+      - { id: "1711536487001-source-1711536600001-target", source: "1711536487001", sourceHandle: source, target: "1711536600001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: start, targetType: knowledge-retrieval, isInIteration: false, isInLoop: false } }
+      - { id: "1711536600001-source-1711536522001-target", source: "1711536600001", sourceHandle: source, target: "1711536522001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: knowledge-retrieval, targetType: llm, isInIteration: false, isInLoop: false } }
+      - { id: "1711536522001-source-1711536558001-target", source: "1711536522001", sourceHandle: source, target: "1711536558001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: llm, targetType: answer, isInIteration: false, isInLoop: false } }
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+```
+
+---
+
+## 3. Agent (工具调用 + 分支)
+
+**Match when:** the workflow must classify intent or extract parameters, then route
+to different handling (tool call, retrieval, or direct answer).
+
+Shape: `Start -> Question Classifier -> (branches) -> LLM -> Answer`. The skeleton
+below shows two classifier branches re-joined by a Variable Aggregator. Extend each
+branch with the nodes it needs (tool, knowledge-retrieval, code).
+
+```yaml
+version: "0.6.0"
+kind: app
+app:
+  name: "Router Agent"
+  mode: advanced-chat
+  description: "Classify intent, route each branch, then answer."
+  icon: "🧭"
+  icon_type: emoji
+  icon_background: "#D5F5F6"
+  use_icon_as_answer_icon: false
+dependencies: []
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload: { enabled: false }
+    opening_statement: "How can I help?"
+    retriever_resource: { enabled: false }
+    sensitive_word_avoidance: { enabled: false }
+    speech_to_text: { enabled: false }
+    suggested_questions: []
+    suggested_questions_after_answer: { enabled: false }
+    text_to_speech: { enabled: false }
+  graph:
+    nodes:
+      - id: "1711536487001"
+        type: custom
+        position: { x: 80, y: 282 }
+        data: { type: start, title: "Start", variables: [] }
+      - id: "1711536700001"
+        type: custom
+        position: { x: 380, y: 282 }
+        data:
+          type: question-classifier
+          title: "Question Classifier"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0 }
+          query_variable_selector: ["sys", query]
+          classes:
+            - { id: "1", name: "需要工具" }
+            - { id: "2", name: "直接回答" }
+          instruction: "将用户问题分类到最合适的一类。"
+          vision: { enabled: false }
+      - id: "1711536800001"
+        type: custom
+        position: { x: 680, y: 182 }
+        data:
+          type: llm
+          title: "LLM (with tool)"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0.3 }
+          prompt_template:
+            - { role: system, text: "Use available tools to help the user." }
+            - { role: user, text: "{{#sys.query#}}" }
+          context: { enabled: false, variable_selector: [] }
+          memory:
+            query_prompt_template: "{{#sys.query#}}"
+            window: { enabled: false, size: 10 }
+          vision: { enabled: false }
+      - id: "1711536800002"
+        type: custom
+        position: { x: 680, y: 382 }
+        data:
+          type: llm
+          title: "LLM (direct)"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0.5 }
+          prompt_template:
+            - { role: system, text: "Answer the user directly." }
+            - { role: user, text: "{{#sys.query#}}" }
+          context: { enabled: false, variable_selector: [] }
+          memory:
+            query_prompt_template: "{{#sys.query#}}"
+            window: { enabled: false, size: 10 }
+          vision: { enabled: false }
+      - id: "1711536900001"
+        type: custom
+        position: { x: 980, y: 282 }
+        data:
+          type: variable-aggregator
+          title: "Merge Branches"
+          output_type: string
+          variables:
+            - ["1711536800001", text]
+            - ["1711536800002", text]
+      - id: "1711536558001"
+        type: custom
+        position: { x: 1280, y: 282 }
+        data:
+          type: answer
+          title: "Answer"
+          answer: "{{#1711536900001.output#}}"
+          variables: []
+    edges:
+      - { id: "1711536487001-source-1711536700001-target", source: "1711536487001", sourceHandle: source, target: "1711536700001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: start, targetType: question-classifier, isInIteration: false, isInLoop: false } }
+      - { id: "1711536700001-1-1711536800001-target", source: "1711536700001", sourceHandle: "1", target: "1711536800001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: question-classifier, targetType: llm, isInIteration: false, isInLoop: false } }
+      - { id: "1711536700001-2-1711536800002-target", source: "1711536700001", sourceHandle: "2", target: "1711536800002", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: question-classifier, targetType: llm, isInIteration: false, isInLoop: false } }
+      - { id: "1711536800001-source-1711536900001-target", source: "1711536800001", sourceHandle: source, target: "1711536900001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: llm, targetType: variable-aggregator, isInIteration: false, isInLoop: false } }
+      - { id: "1711536800002-source-1711536900001-target", source: "1711536800002", sourceHandle: source, target: "1711536900001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: llm, targetType: variable-aggregator, isInIteration: false, isInLoop: false } }
+      - { id: "1711536900001-source-1711536558001-target", source: "1711536900001", sourceHandle: source, target: "1711536558001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: variable-aggregator, targetType: answer, isInIteration: false, isInLoop: false } }
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+```
+
+Note: classifier branch edges use the class `id` as `sourceHandle` (`"1"`, `"2"`).
+Add a `dependencies` entry for any plugin-backed tool you wire into a branch.
+
+---
+
+## 4. Translation (文本转换/翻译)
+
+**Match when:** input text is transformed by an LLM with a fixed system prompt and
+returned as a result. Shown as a one-shot `workflow` ending at `end` — switch to
+`advanced-chat` + `answer` if it should be conversational.
+
+Shape: `Start (text input) -> LLM -> End`.
+
+```yaml
+version: "0.6.0"
+kind: app
+app:
+  name: "EN->ZH Translator"
+  mode: workflow
+  description: "Translate English input to Chinese."
+  icon: "🌐"
+  icon_type: emoji
+  icon_background: "#E0F2FE"
+  use_icon_as_answer_icon: false
+dependencies: []
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload: { enabled: false }
+    opening_statement: ""
+    retriever_resource: { enabled: false }
+    sensitive_word_avoidance: { enabled: false }
+    speech_to_text: { enabled: false }
+    suggested_questions: []
+    suggested_questions_after_answer: { enabled: false }
+    text_to_speech: { enabled: false }
+  graph:
+    nodes:
+      - id: "1711536487001"
+        type: custom
+        position: { x: 80, y: 282 }
+        data:
+          type: start
+          title: "Start"
+          variables:
+            - label: "英文文本"
+              variable: input_text
+              type: paragraph
+              required: true
+              max_length: 50000
+      - id: "1711536522001"
+        type: custom
+        position: { x: 380, y: 282 }
+        data:
+          type: llm
+          title: "Translate"
+          model:
+            provider: langgenius/tongyi/tongyi
+            name: qwen3.5-flash
+            mode: chat
+            completion_params: { temperature: 0.3 }
+          prompt_template:
+            - { role: system, text: "You are a professional translator. Translate the user's English text into natural Chinese. Output only the translation." }
+            - { role: user, text: "{{#1711536487001.input_text#}}" }
+          context: { enabled: false, variable_selector: [] }
+          vision: { enabled: false }
+      - id: "1711536558001"
+        type: custom
+        position: { x: 680, y: 282 }
+        data:
+          type: end
+          title: "End"
+          outputs:
+            - variable: result
+              value_selector: ["1711536522001", text]
+    edges:
+      - { id: "1711536487001-source-1711536522001-target", source: "1711536487001", sourceHandle: source, target: "1711536522001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: start, targetType: llm, isInIteration: false, isInLoop: false } }
+      - { id: "1711536522001-source-1711536558001-target", source: "1711536522001", sourceHandle: source, target: "1711536558001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: llm, targetType: end, isInIteration: false, isInLoop: false } }
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+```
+
+This `workflow` LLM has **no `memory`** block and no `sys.query` — both are
+chatflow-only. See the Schema Pitfalls in `SKILL.md`.

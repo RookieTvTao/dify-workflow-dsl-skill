@@ -7,7 +7,7 @@ description: >
   tools, and import/export compatibility questions.
 ---
 
-# Dify Workflow DSL
+# Dify Workflow DSL (Dify 工作流 DSL)
 
 Use this skill to produce import-ready Dify DSL YAML. Dify calls the exported
 workflow file a DSL; it is a YAML app definition with app metadata, dependencies,
@@ -76,6 +76,31 @@ Load only the relevant reference files:
   These samples are real-world compatibility evidence, not the target version
   authority.
 - `references/complete-examples.md` for full importable examples and graph layouts.
+- `references/templates.md` for minimal starter skeletons (chatbot, RAG, agent,
+  translation) to adapt as a complete importable file.
+
+## Node Routing Table (节点路由表)
+
+Quick picker for the node type that fits a task. Each row points to the full
+schema in `references/node-schemas.md`. The second column is the `data.type`.
+
+| 节点 / Node | `data.type` | 用途 / Purpose | 关键字段 / Key fields | Schema |
+| --- | --- | --- | --- | --- |
+| Start / 开始 | `start` | entry point; declares inputs | `variables` | `node-schemas.md#start` |
+| End / 结束 | `end` | workflow terminal; declares outputs | `outputs` | `node-schemas.md#end` |
+| Answer / 直接回复 | `answer` | chatflow streaming reply | `answer`, `variables` | `node-schemas.md#answer` |
+| LLM | `llm` | call a language model | `model`, `prompt_template`, `context`, `memory` | `node-schemas.md#llm` |
+| Knowledge Retrieval / 知识检索 | `knowledge-retrieval` | retrieve doc chunks from a dataset | `query_variable_selector`, `dataset_ids`, `retrieval_mode` | `node-schemas.md#knowledge-retrieval` |
+| Code / 代码 | `code` | run python3/JS code | `code_language`, `code`, `variables`, `outputs` | `node-schemas.md#code` |
+| HTTP Request / HTTP 请求 | `http-request` | call an HTTP API | `method`, `url`, `headers`, `body`, `authorization` | `node-schemas.md#http-request` |
+| If/Else / 条件分支 | `if-else` | conditional branches | `cases` (case_id, conditions) | `node-schemas.md#if-else` |
+| Variable Aggregator / 变量聚合 | `variable-aggregator` | merge mutually-exclusive branch outputs | `output_type`, `variables` | `node-schemas.md#variable-aggregator` |
+| Iteration / 迭代 | `iteration` | loop over an array (subgraph per item) | `iterator_selector`, `output_selector`, `start_node_id` | `node-schemas.md#iteration` |
+| Document Extractor / 文档提取 | `document-extractor` | extract text from uploaded files | `variable_selector` | `node-schemas.md#document-extractor` |
+| Template Transform / 模板转换 | `template-transform` | render a Jinja2 template | `template`, `variables` | `node-schemas.md#template-transform` |
+| Question Classifier / 问题分类 | `question-classifier` | LLM-classify the input | `query_variable_selector`, `model`, `classes` | `node-schemas.md#question-classifier` |
+| Parameter Extractor / 参数提取 | `parameter-extractor` | LLM-extract structured params | `query`, `model`, `parameters` | `node-schemas.md#parameter-extractor` |
+| Tool / 工具 | `tool` | call an external tool (builtin/api/mcp/workflow) | `provider_id`, `provider_type`, `tool_name`, `tool_parameters` | `node-schemas.md#tool` |
 
 ## Required Decisions
 
@@ -126,6 +151,38 @@ Load only the relevant reference files:
   legacy exports.
 - For public examples, replace tenant-specific icon URLs and credentials with
   placeholders unless they are harmless exported metadata.
+
+## Schema Pitfalls (常见 Schema 陷阱)
+
+These node-shape mistakes commonly break Dify import. They are not restated in
+Authoring Rules; cross-check there too.
+
+1. **Variable-list shape differs by node. / 各节点的 variables 形状不同。**
+   - `code`, `llm`, `template-transform`, `parameter-extractor` use **objects**:
+     `{ variable: name, value_selector: ["id", "field"] }`.
+   - `variable-aggregator` uses a **bare nested list** (no `variable:` wrapper):
+     `[["branch1_id", "text"], ["branch2_id", "text"]]`.
+   - `document-extractor` uses singular `variable_selector: ["id", "field"]`
+     (flat array, not a list of objects).
+2. **`memory` is chatflow-only. / memory 仅属于 advanced-chat 的 LLM。**
+   In `workflow` mode there is no `sys.query` and no conversation history, so LLM
+   nodes must omit the `memory` block. Same for LLM nodes inside an iteration in
+   a workflow app.
+3. **`end.outputs` vs `code.outputs` differ in shape. / 两类 outputs 形状不同。**
+   `end.outputs` is a **list** of `{ variable, value_selector, value_type }`.
+   `code.outputs` is a **dict** keyed by variable name with `{ type, children }`
+   values. Do not swap the two.
+4. **`iteration` needs sizing in two places, plus child-wiring rules.**
+   Set `width`/`height` both inside `data` and at the outer node level. The
+   iteration-start helper uses wrapper `type: custom-iteration-start` and
+   `data.type: iteration-start`. Child nodes declare `parentId`,
+   `data.isInIteration: true`, `data.iteration_id`, and `zIndex: 1002`; their
+   `position` is relative to the container (start near `{x: 24, y: 68}`). When in
+   doubt, copy iteration internals from a real export.
+5. **`output_type` must match the real element type. / output_type 须匹配真实类型。**
+   Iteration `output_type` (and any list/operator `var_type`) must match what the
+   selector returns: `array[string]`, `array[number]`, `array[file]`, etc. A
+   mismatch breaks runtime variable resolution even when import succeeds.
 
 ## Validation Checklist
 
