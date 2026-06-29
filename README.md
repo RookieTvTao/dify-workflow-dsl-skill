@@ -1,237 +1,122 @@
 # Dify Workflow DSL Skill
 
-**Dify Workflow DSL Skill** helps an AI coding agent create, modify, review, and
-debug Dify Workflow/Chatflow YAML files that can be imported directly into Dify.
+A skill that helps an AI coding agent create, modify, review, and debug Dify
+Workflow / Chatflow DSL (YAML) files that import directly into Dify. Describe the
+workflow in natural language and the agent produces a complete file with nodes,
+edges, layout, and configuration.
 
-I started this project after realizing that building Dify workflows by hand is
-powerful but often painfully slow: drag nodes, connect branches, configure tools,
-test imports, repeat. Then I noticed Dify supports YAML import/export for
-workflows. That led to a simple idea: why not let AI learn how Dify writes
-workflows, and then ask AI to write the DSL for us?
+> Maintainer: **RookieTvTao** · Repo: https://github.com/RookieTvTao/dify-workflow-dsl-skill (private)
 
-This skill is the result of that idea. It targets Dify's official current app
-DSL version, `0.6.0`, by studying Dify's open-source code, exported Dify DSL
-files, and public Dify workflow DSL examples from GitHub, then turning those
-patterns into a reusable skill.
+---
 
-During the research process, I systematically studied Dify's official source
-code, my own exported DSL files, and multiple public DSL example repositories.
-Those public repositories include 262 parseable Dify app DSL files, covering real
-Chatflow, Workflow, Agent, database read/write, plugin tool, knowledge base, file
-processing, triggered integration, branching, and loop scenarios.
+## Provenance & Attribution (read first)
 
-One important detail: most public DSL examples were exported from older Dify
-versions. A small newer sample now includes `0.6.0`, but the corpus is still
-mostly legacy. For that reason, this project uses Dify's official source code as
-the authority for new `0.6.0` DSL generation, while using the public DSL corpus
-as practical reference material for compatibility, graph structure, trigger
-workflows, and tool-node patterns.
+**This repository is a derivative work, not built from scratch.** It combines two
+upstream projects:
 
-中文说明见 [README_CN.md](./README_CN.md).
+| Content | Source | License |
+| --- | --- | --- |
+| Base skill (SKILL.md structure, `references/`, `scripts/validate_dsl.py`, `install.sh`, `agents/`) | forked from [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill) | **No LICENSE** (All Rights Reserved by default); retained here for personal use with attribution to the original author |
+| Enhancements (node routing table / schema pitfalls / templates concepts) | adapted from [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) | **MIT License**, Copyright (c) 2025 jspi-fu |
 
-**Current release: V2.0.** The earlier version was effectively V1.0: it
-established the import-ready Dify DSL baseline. V2.0 adds deeper real-world YAML
-learning, business use-case routing, and Agent Skills specification alignment.
+Because the upstream base skill is unlicensed, this repository **adds no LICENSE**
+and makes no copyright claim over yzmw123's original work. The Aeson-skills-derived
+parts follow its MIT terms. Obtain upstream permission before any public or
+commercial redistribution.
 
-## Why This Exists
+---
 
-Dify workflows are powerful, but DSL authoring is easy to get wrong:
+## What this version changes vs. upstream
 
-- `version` must be a string.
-- Graph edges must point to real node IDs.
-- Tool nodes need exact provider/plugin/tool identity fields.
-- Database tools need safe SQL parameter binding.
-- New plugin tools need exported schemas or plugin metadata.
+On top of yzmw123's original (all `references/` and the validator kept), this version adds:
 
-This skill collects Dify DSL structure, node schemas, real exported examples,
-database read/write patterns, plugin marketplace guidance, and a local validator
-into one reusable package.
+- **Node Routing Table**: a 15-row quick-pick table in SKILL.md mapping each use case
+  to a node `data.type` and its key fields, pointing into `references/node-schemas.md`.
+- **Schema Pitfalls**: the 5 field-shape mistakes most likely to break import —
+  variable-list shape differs by node, `memory` is chatflow-only, `end.outputs` vs
+  `code.outputs` differ in shape, iteration needs sizing in two places plus child-wiring
+  rules, and `output_type` must match the real element type.
+- **`references/templates.md`**: 4 import-ready skeleton templates (chatbot / RAG /
+  agent / translation) with full nodes, edges, and layout coordinates.
+- Bilingual (EN / 中文) headings and key terms.
 
-For new workflows, the skill defaults to `version: "0.6.0"`, the current version
-declared by Dify source. Older public DSLs are still valuable, but they are not
-treated as the latest schema authority.
+**Deliberately not added** (YAGNI): Admin API deployment, a `config.yml`-based
+multi-version detection system.
 
-For new app creation, the skill defaults to Dify `workflow` mode. It switches or
-offers `advanced-chat` when the user needs Chatflow behavior such as multi-turn
-memory, `sys.query`, chat file upload, or `answer` nodes.
+---
 
-## V2.0 Update Notes
-
-V1.0 focused on making the agent able to write valid, import-ready Dify DSL:
-official `0.6.0` structure, node schemas, graph wiring, plugin dependencies,
-database tool patterns, and a local validator.
-
-V2.0 goes further: it teaches the agent how to choose the right workflow shape
-for a business request, not only how to fill YAML fields.
-
-- Expanded the public YAML corpus from 172 to 262 parseable Dify app DSL files.
-- Studied three additional sources:
-  `TheOneWithChair/Dify-DSL-generator`,
-  `g-krishna0/dify-export-test`, and
-  `Petrus-Han/dify-usecase-playground`.
-- Added a default mode strategy: create `workflow` by default, and use
-  `advanced-chat` only when Chatflow behavior is needed.
-- Added `references/usecase-node-selection.md` to map business needs to modes,
-  triggers, node patterns, and reliability rules.
-- Added stronger guidance for schedule, webhook, plugin-trigger, Slack, Feishu,
-  email, GitHub sync, document extraction, form validation, RAG, and reusable
-  workflow-tool scenarios.
-- Updated the validator so trigger-based side-effect workflows without `end`
-  produce a precise warning instead of a generic terminal-node warning.
-- Checked the skill against the Agent Skills specification and Anthropic's public
-  skills examples; the install payload is now limited to the files the skill
-  actually uses.
-
-V2.0 still targets official Dify app DSL `version: "0.6.0"` for new generation.
-Public examples are used as real-world design evidence, not as the source of
-truth for the latest schema.
-
-## Installation
-
-Clone this repository, then run the installer for your agent platform:
-
-```bash
-git clone https://github.com/yzmw123/dify-workflow-dsl-skill.git
-cd dify-workflow-dsl-skill
-bash install.sh --platform codex
-```
-
-
-
-Other platforms:
-
-```bash
-# Claude Code
-bash install.sh --platform claude
-
-# Codex
-bash install.sh --platform codex
-
-# OpenClaw
-bash install.sh --platform openclaw
-
-# Hermes
-bash install.sh --platform hermes
-```
-
-Install to all supported default locations:
-
-```bash
-bash install.sh --platform all
-```
-
-If your agent uses a different skills directory, pass it explicitly:
-
-```bash
-bash install.sh --platform codex --target-dir "$HOME/.codex/skills/dify-workflow-dsl"
-```
-
-The installer is intentionally simple: it copies `SKILL.md`, `references/`,
-`scripts/`, and metadata into the target skills directory. Re-run with `--force`
-to overwrite a previous installation.
-
-## What It Can Do
+## What it can do
 
 - Generate import-ready `workflow` and `advanced-chat` Dify DSL YAML.
-- Recommend `workflow` vs `advanced-chat` and choose node patterns from business
-  requirements.
+- Recommend `workflow` vs `advanced-chat` and choose node patterns from requirements.
 - Target official Dify app DSL `version: "0.6.0"` for new files.
-- Create common nodes: Start, End, Answer, LLM, Code, IF/ELSE, HTTP Request,
-  Template Transform, Variable Aggregator, Assigner, Document Extractor,
-  Question Classifier, Parameter Extractor, Knowledge Retrieval, Agent,
-  Iteration, Loop, Tool, Datasource, trigger nodes, and more.
-- Wire graph edges and branch handles correctly.
-- Add marketplace, package, and GitHub plugin dependencies.
-- Build database read/write workflows with PostgreSQL tools, including patterns
-  for `spance/db_client_node` and `hjlarry/database`.
-- Review existing DSL files for import risks and behavioral bugs.
-- Validate YAML with `scripts/validate_dsl.py`.
+- Author common nodes: Start, End, Answer, LLM, Code, IF/ELSE, HTTP Request,
+  Template Transform, Variable Aggregator, Assigner, Document Extractor, Question
+  Classifier, Parameter Extractor, Knowledge Retrieval, Agent, Iteration, Loop, Tool,
+  Datasource, trigger nodes, and more.
+- Wire node IDs, graph edges, and branch handles correctly.
+- Add marketplace / package / GitHub plugin dependencies.
+- Build database read/write workflows, including `spance/db_client_node` and
+  `hjlarry/database` patterns.
+- Review existing DSL for import risks and behavioral bugs.
+- Validate with `scripts/validate_dsl.py`.
 
-## Key Advantage
+---
 
-This skill turns Dify workflow creation into a requirements-writing task.
+## How to use
 
-You can say something like:
-
-```text
-Create a Dify Chatflow where users upload a financial report, extract the text,
-summarize it, write the parsed result into PostgreSQL, and later answer questions
-by reading the right document record from the database.
-```
-
-The agent can then produce the YAML structure, nodes, edges, tool parameters,
-database SQL, and validation notes. That is the liberation: less canvas clicking,
-less copy-paste, fewer invisible import mistakes.
-
-## How To Use
-
-Place this folder in your Codex skills directory or invoke it explicitly when
-asking the agent to work on a Dify DSL.
-
-Example prompt:
+Place this directory in your agent's skills directory (e.g. `~/.claude/skills/`),
+or invoke it explicitly:
 
 ```text
 Use $dify-workflow-dsl to create an advanced-chat Dify workflow.
-Users can upload a PDF, extract text, summarize it with Qwen, insert the summary
-and raw text into PostgreSQL, and answer the user after the insert succeeds.
+Users upload a PDF; extract text, summarize with Qwen, write to PostgreSQL,
+and reply to the user.
 ```
 
-For editing an existing DSL:
+Review an existing DSL:
 
 ```text
-Use $dify-workflow-dsl to review this Dify YAML and fix any import-breaking
-issues. Pay special attention to tool nodes and database SQL.
+Use $dify-workflow-dsl to review this Dify YAML and fix import-breaking issues.
+Focus on tool nodes, database SQL, and edge wiring.
 ```
 
-For a new plugin tool:
+For a new plugin tool, the safest path is to configure the tool node once in Dify,
+export a minimal DSL, and let the agent reuse its `provider_id` / `tool_name` /
+`paramSchemas` / `tool_parameters` / dependency fields.
 
-```text
-Use $dify-workflow-dsl to add the GitHub plugin search tool.
-I have exported a minimal Dify DSL containing that tool node; use it as the schema
-source and adapt it into my workflow.
+---
+
+## Installation
+
+```bash
+git clone https://github.com/RookieTvTao/dify-workflow-dsl-skill.git
+cd dify-workflow-dsl-skill
+bash install.sh --platform claude      # or codex / openclaw / hermes / all
 ```
 
-## Recommended Workflow For New Plugin Tools
-
-The safest way to support a tool that is not already in the examples:
-
-1. In Dify, create a minimal workflow.
-2. Add and configure the target tool node once.
-3. Export the DSL.
-4. Give that exported YAML to the agent.
-5. Let the agent reuse the exact `provider_id`, `tool_name`, `paramSchemas`,
-   `tool_parameters`, and dependency fields.
-
-Reliability levels:
-
-- Minimal exported DSL from your workspace: highest confidence.
-- Plugin source repo or `.difypkg`: high confidence.
-- Marketplace page only: medium confidence.
-- Tool name only: draft only, not guaranteed.
+> This repo is private; `clone` requires GitHub credentials with access. `install.sh`
+> only copies `SKILL.md`, `references/`, `scripts/`, and `agents/` into the target
+> skills directory; re-run with `--force` to overwrite a prior install.
 
 ## Validation
 
-Run:
-
 ```bash
-python3 scripts/validate_dsl.py path/to/workflow.yml
+python scripts/validate_dsl.py path/to/workflow.yml
+python scripts/validate_dsl.py examples/*.yml   # batch
 ```
 
-Validate multiple DSL files:
+The validator checks YAML parsing, DSL version type, graph edges, node-type
+consistency, LLM/tool basics, variable references, and common SQL mistakes such as
+trailing commas in `INSERT` column lists.
 
-```bash
-python3 scripts/validate_dsl.py examples/*.yml
-```
+---
 
-The validator checks YAML parsing, string DSL version, graph edge references,
-node type consistency, LLM/tool basics, variable references, and common SQL
-mistakes such as trailing commas in `INSERT` column lists.
-
-## Project Structure
+## Project structure
 
 ```text
 .
-├── SKILL.md
+├── SKILL.md              # main doc (node routing table, schema pitfalls)
 ├── agents/
 │   └── openai.yaml
 ├── install.sh
@@ -243,6 +128,7 @@ mistakes such as trailing commas in `INSERT` column lists.
 │   ├── official-0.6-target.md
 │   ├── plugin-marketplace-tools.md
 │   ├── real-world-yml-study.md
+│   ├── templates.md        # ← added in this version
 │   └── usecase-node-selection.md
 ├── scripts/
 │   └── validate_dsl.py
@@ -250,54 +136,19 @@ mistakes such as trailing commas in `INSERT` column lists.
 └── README_CN.md
 ```
 
-## Maintenance Guide
+---
 
-Keep this skill useful by updating it when Dify changes:
+## Upstream & credits
 
-- Check the current DSL version in Dify source.
-- Keep the official target reference separate from old public sample notes.
-- Export minimal DSLs for new node types and plugin tools.
-- Periodically sample real public DSLs, especially from active repositories, and
-  fold repeated patterns back into `references/`.
-- Add stable patterns to `references/`, not to `SKILL.md`.
-- Keep `SKILL.md` short so the agent loads only the essential workflow.
-- Add deterministic checks to `scripts/validate_dsl.py` when repeated import
-  errors are discovered.
-- Re-run skill validation after edits:
+This project stands on the shoulders of:
 
-```bash
-python3 /path/to/skill-creator/scripts/quick_validate.py .
-python3 scripts/validate_dsl.py path/to/workflow.yml
-```
+- Base skill: [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill)
+- Enhancement reference: [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) (MIT)
+- Dify: [`langgenius/dify`](https://github.com/langgenius/dify)
+- Public DSL corpus references: `BannyLon/DifyAIA`, `svcvit/Awesome-Dify-Workflow`,
+  `wwwzhouhui/dify-for-dsl`, `TheOneWithChair/Dify-DSL-generator`,
+  `g-krishna0/dify-export-test`, `Petrus-Han/dify-usecase-playground`
+- Spec references: [Agent Skills specification](https://agentskills.io/specification),
+  [Anthropic skills examples](https://github.com/anthropics/skills)
 
-## Limitations
-
-- A generated DSL may still need import testing inside your Dify workspace.
-- Plugin authorization is usually stored in Dify, not in DSL.
-- A marketplace page alone may not expose enough schema detail to guarantee a
-  tool node will work.
-- LLM-generated SQL should be treated carefully; prefer fixed parameterized SQL
-  whenever possible.
-- Dify versions, plugin versions, and exported schemas can change over time.
-
-## Acknowledgements
-
-This project references Dify's official open-source implementation and selected
-public Dify DSL/workflow examples. Special thanks to:
-
-- Dify: https://github.com/langgenius/dify
-- DifyAIA: https://github.com/BannyLon/DifyAIA
-- Awesome-Dify-Workflow: https://github.com/svcvit/Awesome-Dify-Workflow
-- dify-for-dsl: https://github.com/wwwzhouhui/dify-for-dsl
-- Dify DSL generator: https://github.com/TheOneWithChair/Dify-DSL-generator
-- dify-export-test: https://github.com/g-krishna0/dify-export-test
-- dify-usecase-playground: https://github.com/Petrus-Han/dify-usecase-playground
-- Agent Skills specification: https://agentskills.io/specification
-- Anthropic skills examples: https://github.com/anthropics/skills
-
-## Useful Links
-
-- Dify: https://github.com/langgenius/dify
-- Dify Marketplace: https://marketplace.dify.ai/
-- Dify official plugins: https://github.com/langgenius/dify-official-plugins
-- Dify marketplace plugin index: https://github.com/langgenius/dify-plugins
+中文版:[README_CN.md](./README_CN.md)
