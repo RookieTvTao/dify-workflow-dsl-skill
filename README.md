@@ -5,24 +5,26 @@ Workflow / Chatflow DSL (YAML) files that import directly into Dify. Describe th
 workflow in natural language and the agent produces a complete file with nodes,
 edges, layout, and configuration.
 
-> Maintainer: **RookieTvTao** · Repo: https://github.com/RookieTvTao/dify-workflow-dsl-skill (private)
+> Maintainer: **RookieTvTao** · Repo: https://github.com/RookieTvTao/dify-workflow-dsl-skill
 
 ---
 
 ## Provenance & Attribution (read first)
 
-**This repository is a derivative work, not built from scratch.** It combines two
-upstream projects:
+This repository combines content from multiple sources under different licensing
+postures. The maintainer's original work (node routing table, schema pitfalls,
+templates, README, and engineering files) is under the **MIT License**
+(`LICENSE`). The base skill is forked from an unlicensed upstream.
 
 | Content | Source | License |
 | --- | --- | --- |
-| Base skill (SKILL.md structure, `references/`, `scripts/validate_dsl.py`, `install.sh`, `agents/`) | forked from [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill) | **No LICENSE** (All Rights Reserved by default); retained here for personal use with attribution to the original author |
-| Enhancements (node routing table / schema pitfalls / templates concepts) | adapted from [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) | **MIT License**, Copyright (c) 2025 jspi-fu |
+| Original enhancements (node routing table, schema pitfalls, `templates.md`, README, `requirements.txt`, `examples/`, `.github/`, CI) | by RookieTvTao | **MIT**, Copyright (c) 2026 RookieTvTao |
+| Base skill (SKILL.md structure, `references/`\*, `scripts/validate_dsl.py`, `install.sh`, `agents/`) | forked from [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill) | **No LICENSE** (All Rights Reserved); retained with attribution, redistribution requires upstream permission |
+| Enhancement concepts (node routing table / schema pitfalls / templates) | adapted from [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) | **MIT**, Copyright (c) 2025 jspi-fu |
 
-Because the upstream base skill is unlicensed, this repository **adds no LICENSE**
-and makes no copyright claim over yzmw123's original work. The Aeson-skills-derived
-parts follow its MIT terms. Obtain upstream permission before any public or
-commercial redistribution.
+Full provenance and the exact scope of each license are in `NOTICE`. The MIT
+`LICENSE` covers only the original contributions; it does not extend to the
+All-Rights-Reserved base.
 
 ---
 
@@ -38,10 +40,11 @@ On top of yzmw123's original (all `references/` and the validator kept), this ve
   rules, and `output_type` must match the real element type.
 - **`references/templates.md`**: 4 import-ready skeleton templates (chatbot / RAG /
   agent / translation) with full nodes, edges, and layout coordinates.
+- **Multi-version support**: target 0.5.x / 0.6.x / 0.7.x (default 0.7.0); see
+  `references/dsl-versions.md`.
+- **Engineering**: `requirements.txt`, an `examples/` corpus validated by a
+  `validate` GitHub Actions workflow, and contribution templates.
 - Bilingual (EN / 中文) headings and key terms.
-
-**Deliberately not added** (YAGNI): Admin API deployment, a `config.yml`-based
-multi-version detection system.
 
 ---
 
@@ -49,7 +52,8 @@ multi-version detection system.
 
 - Generate import-ready `workflow` and `advanced-chat` Dify DSL YAML.
 - Recommend `workflow` vs `advanced-chat` and choose node patterns from requirements.
-- Target official Dify app DSL `version: "0.6.0"` for new files.
+- Target the user's chosen DSL version (0.5.x / 0.6.x / 0.7.x; default 0.7.0) for
+  new files.
 - Author common nodes: Start, End, Answer, LLM, Code, IF/ELSE, HTTP Request,
   Template Transform, Variable Aggregator, Assigner, Document Extractor, Question
   Classifier, Parameter Extractor, Knowledge Retrieval, Agent, Iteration, Loop, Tool,
@@ -95,13 +99,16 @@ cd dify-workflow-dsl-skill
 bash install.sh --platform claude      # or codex / openclaw / hermes / all
 ```
 
-> This repo is private; `clone` requires GitHub credentials with access. `install.sh`
-> only copies `SKILL.md`, `references/`, `scripts/`, and `agents/` into the target
-> skills directory; re-run with `--force` to overwrite a prior install.
+> `install.sh` only copies `SKILL.md`, `references/`, `scripts/`, and `agents/`
+> into the target skills directory; re-run with `--force` to overwrite a prior
+> install.
 
 ## Validation
 
+Install the dependency first, then validate:
+
 ```bash
+pip install -r requirements.txt          # or: pip install pyyaml
 python scripts/validate_dsl.py path/to/workflow.yml
 python scripts/validate_dsl.py examples/*.yml   # batch
 ```
@@ -117,21 +124,35 @@ trailing commas in `INSERT` column lists.
 ```text
 .
 ├── SKILL.md              # main doc (node routing table, schema pitfalls)
+├── LICENSE               # MIT — original contributions only (see NOTICE)
+├── NOTICE                # provenance & licensing posture
+├── requirements.txt      # validator dependency (pyyaml)
 ├── agents/
 │   └── openai.yaml
+├── examples/             # importable YAML validated by CI
+│   ├── translation.yml
+│   ├── if-else.yml
+│   ├── http-code.yml
+│   └── chatflow.yml
 ├── install.sh
 ├── references/
 │   ├── complete-examples.md
 │   ├── database-tools.md
 │   ├── dsl-structure.md
+│   ├── dsl-versions.md     # ← version selection (0.5/0.6/0.7)
 │   ├── node-schemas.md
-│   ├── official-0.6-target.md
+│   ├── official-target.md
 │   ├── plugin-marketplace-tools.md
 │   ├── real-world-yml-study.md
-│   ├── templates.md        # ← added in this version
+│   ├── templates.md
 │   └── usecase-node-selection.md
 ├── scripts/
 │   └── validate_dsl.py
+├── .github/
+│   ├── workflows/validate.yml
+│   ├── CONTRIBUTING.md
+│   ├── ISSUE_TEMPLATE/
+│   └── pull_request_template.md
 ├── README.md
 └── README_CN.md
 ```

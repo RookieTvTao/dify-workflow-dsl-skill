@@ -1,0 +1,245 @@
+app:
+  name: "旅行助手"
+  description: "多轮对话旅行顾问"
+  icon: "✈️"
+  icon_type: emoji
+  icon_background: "#FFEAD5"
+  mode: advanced-chat
+  use_icon_as_answer_icon: false
+kind: app
+version: "0.7.0"
+dependencies: []
+workflow:
+  conversation_variables:
+    - description: "对话历史"
+      id: "cv-001"
+      name: History
+      selector: [conversation, History]
+      value: []
+      value_type: array[string]
+  environment_variables: []
+  features:
+    file_upload:
+      image:
+        enabled: false
+      enabled: false
+    opening_statement: "你好！我是旅行助手，请告诉我你想去哪里旅行？"
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+      - "推荐一个3天的旅行目的地"
+      - "日本旅行需要准备什么？"
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: template-transform
+      id: 4000001-source-4000002-target
+      source: "4000001"
+      sourceHandle: source
+      target: "4000002"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: assigner
+      id: 4000002-source-4000003-target
+      source: "4000002"
+      sourceHandle: source
+      target: "4000003"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: assigner
+        targetType: agent
+      id: 4000003-source-4000004-target
+      source: "4000003"
+      sourceHandle: source
+      target: "4000004"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: agent
+        targetType: answer
+      id: 4000004-source-answer-target
+      source: "4000004"
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: answer
+        targetType: template-transform
+      id: answer-source-4000005-target
+      source: answer
+      sourceHandle: source
+      target: "4000005"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: assigner
+      id: 4000005-source-4000006-target
+      source: "4000005"
+      sourceHandle: source
+      target: "4000006"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: "开始"
+        type: start
+        variables: []
+      height: 54
+      id: "4000001"
+      position: { x: 30, y: 300 }
+      positionAbsolute: { x: 30, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "用户消息格式化"
+        type: template-transform
+        template: "user:{{ user_msg }}"
+        variables:
+          - value_selector: [sys, query]
+            variable: user_msg
+      height: 54
+      id: "4000002"
+      position: { x: 334, y: 300 }
+      positionAbsolute: { x: 334, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "追加用户消息"
+        type: assigner
+        version: "2"
+        items:
+          - input_type: variable
+            operation: append
+            value: ["4000002", output]
+            variable_selector: [conversation, History]
+            write_mode: over-write
+      height: 88
+      id: "4000003"
+      position: { x: 638, y: 300 }
+      positionAbsolute: { x: 638, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "旅行顾问"
+        type: agent
+        agent_strategy_provider_name: langgenius/agent/agent
+        agent_strategy_name: function_calling
+        agent_strategy_label: FunctionCalling
+        plugin_unique_identifier: "langgenius/agent:0.0.4@hash"
+        agent_parameters:
+          model:
+            type: constant
+            value:
+              mode: chat
+              model: gpt-4o-mini
+              model_type: llm
+              provider: langgenius/openai/openai
+              type: model-selector
+          query:
+            type: constant
+            value: "{{#conversation.History#}}"
+          instruction:
+            type: constant
+            value: "你是旅行顾问，为用户规划旅行。"
+          tools:
+            type: constant
+            value:
+              - enabled: true
+                provider_name: langgenius/duckduckgo/duckduckgo
+                tool_name: ddgo_search
+                type: builtin
+                parameters:
+                  max_results: 5
+                extra:
+                  description: "搜索旅行信息"
+          maximum_iterations:
+            type: constant
+            value: 4
+        output_schema: null
+        desc: ""
+      height: 198
+      id: "4000004"
+      position: { x: 942, y: 300 }
+      positionAbsolute: { x: 942, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "直接回复"
+        type: answer
+        answer: "{{#4000004.text#}}"
+        variables: []
+      id: answer
+      position: { x: 1246, y: 300 }
+      positionAbsolute: { x: 1246, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "助手消息格式化"
+        type: template-transform
+        template: "assistant:{{ assistant_msg }}"
+        variables:
+          - value_selector: ["4000004", text]
+            variable: assistant_msg
+      height: 54
+      id: "4000005"
+      position: { x: 1246, y: 500 }
+      positionAbsolute: { x: 1246, y: 500 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "追加助手消息"
+        type: assigner
+        version: "2"
+        items:
+          - input_type: variable
+            operation: append
+            value: ["4000005", output]
+            variable_selector: [conversation, History]
+            write_mode: over-write
+      height: 88
+      id: "4000006"
+      position: { x: 1550, y: 500 }
+      positionAbsolute: { x: 1550, y: 500 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport: { x: 50, y: 200, zoom: 0.7 }

@@ -4,21 +4,23 @@
 DSL(YAML)的技能包。用自然语言描述需求,Agent 自动生成包含节点、边、布局与配置的完整
 工作流文件。
 
-> 维护者:**RookieTvTao** · 仓库:https://github.com/RookieTvTao/dify-workflow-dsl-skill(私有)
+> 维护者:**RookieTvTao** · 仓库:https://github.com/RookieTvTao/dify-workflow-dsl-skill
 
 ---
 
 ## 来源与署名(请先读)
 
-**本仓库是派生作品,非从零原创**,基于以下两个上游项目组合而成:
+本仓库由多个来源组合而成,授权姿态各不相同。维护者的原创内容(节点路由表、Schema 陷阱、
+模板、README、工程化文件)采用 **MIT License**(`LICENSE`);基础技能 fork 自未授权的上游。
 
 | 内容 | 来源 | 授权 |
 | --- | --- | --- |
-| 基础技能(SKILL.md 结构、`references/`、`scripts/validate_dsl.py`、`install.sh`、`agents/`) | fork 自 [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill) | **无 LICENSE**(默认 All Rights Reserved);本仓库出于个人使用目的保留其内容并保留原作者署名 |
-| 增强内容(节点路由表 / 常见 Schema 陷阱 / 模板 的思路) | 改编自 [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) | **MIT License**,Copyright (c) 2025 jspi-fu |
+| 原创增强(节点路由表、Schema 陷阱、`templates.md`、README、`requirements.txt`、`examples/`、`.github/`、CI) | RookieTvTao | **MIT**,Copyright (c) 2026 RookieTvTao |
+| 基础技能(SKILL.md 结构、`references/`\*、`scripts/validate_dsl.py`、`install.sh`、`agents/`) | fork 自 [`yzmw123/dify-workflow-dsl-skill`](https://github.com/yzmw123/dify-workflow-dsl-skill) | **无 LICENSE**(All Rights Reserved);保留并署名,再分发需取得上游授权 |
+| 增强思路(节点路由表 / Schema 陷阱 / 模板) | 改编自 [`jspi-fu/Aeson-skills`](https://github.com/jspi-fu/Aeson-skills) | **MIT**,Copyright (c) 2025 jspi-fu |
 
-由于上游基础技能未授权,本仓库**不附加任何 LICENSE**,也不主张对 yzmw123 原作部分的版权;
-Aeson-skills 派生部分遵循其 MIT 条款。如需将本项目用于公开分发或商用,请先取得上游授权。
+完整的来源与各授权的精确范围见 `NOTICE`。MIT `LICENSE` 仅覆盖原创贡献,不延伸至 All
+Rights Reserved 的基础技能部分。
 
 ---
 
@@ -33,9 +35,10 @@ Aeson-skills 派生部分遵循其 MIT 条款。如需将本项目用于公开�
   并遵守子节点接线规则、`output_type` 须匹配真实元素类型。
 - **`references/templates.md`**:4 个可直接导入的骨架模板(chatbot / RAG / agent / translation),
   含完整节点、边与布局坐标。
+- **多版本支持**:面向 0.5.x / 0.6.x / 0.7.x(默认 0.7.0);见 `references/dsl-versions.md`。
+- **工程化**:`requirements.txt`、由 `validate` GitHub Actions 工作流校验的 `examples/` 语料、
+  以及贡献模板。
 - 关键标题与术语增加**中文/英文双语**标注。
-
-**刻意未引入**(遵循 YAGNI):Admin API 自动部署、基于 `config.yml` 的多版本检测系统。
 
 ---
 
@@ -43,7 +46,7 @@ Aeson-skills 派生部分遵循其 MIT 条款。如需将本项目用于公开�
 
 - 生成可导入 Dify 的 `workflow` 与 `advanced-chat` DSL YAML。
 - 根据业务需求判断 `workflow` vs `advanced-chat`,并选择节点组合。
-- 新文件默认面向 Dify 官方 app DSL `version: "0.6.0"`。
+- 新文件默认面向用户所选 DSL 版本(0.5.x / 0.6.x / 0.7.x;默认 0.7.0)。
 - 编写常见节点:Start、End、Answer、LLM、Code、IF/ELSE、HTTP Request、Template Transform、
   Variable Aggregator、Assigner、Document Extractor、Question Classifier、Parameter Extractor、
   Knowledge Retrieval、Agent、Iteration、Loop、Tool、Datasource、各类 Trigger 等。
@@ -84,12 +87,15 @@ cd dify-workflow-dsl-skill
 bash install.sh --platform claude      # 或 codex / openclaw / hermes / all
 ```
 
-> 该仓库为私有,`clone` 需要有访问权限的 GitHub 凭据。`install.sh` 只把 `SKILL.md`、
-> `references/`、`scripts/`、`agents/` 复制到目标 skills 目录;已安装过可加 `--force` 覆盖。
+> `install.sh` 只把 `SKILL.md`、`references/`、`scripts/`、`agents/` 复制到目标 skills
+> 目录;已安装过可加 `--force` 覆盖。
 
 ## 校验
 
+先安装依赖,再校验:
+
 ```bash
+pip install -r requirements.txt          # 或:pip install pyyaml
 python scripts/validate_dsl.py path/to/workflow.yml
 python scripts/validate_dsl.py examples/*.yml   # 批量
 ```
@@ -104,21 +110,35 @@ python scripts/validate_dsl.py examples/*.yml   # 批量
 ```text
 .
 ├── SKILL.md              # 主文档(含节点路由表、Schema 陷阱)
+├── LICENSE               # MIT — 仅覆盖原创贡献(见 NOTICE)
+├── NOTICE                # 来源与授权姿态
+├── requirements.txt      # 校验依赖(pyyaml)
 ├── agents/
 │   └── openai.yaml
+├── examples/             # 可导入 YAML,由 CI 校验
+│   ├── translation.yml
+│   ├── if-else.yml
+│   ├── http-code.yml
+│   └── chatflow.yml
 ├── install.sh
 ├── references/
 │   ├── complete-examples.md
 │   ├── database-tools.md
 │   ├── dsl-structure.md
+│   ├── dsl-versions.md     # ← 版本选择(0.5/0.6/0.7)
 │   ├── node-schemas.md
-│   ├── official-0.6-target.md
+│   ├── official-target.md
 │   ├── plugin-marketplace-tools.md
 │   ├── real-world-yml-study.md
-│   ├── templates.md        # ← 本版本新增
+│   ├── templates.md
 │   └── usecase-node-selection.md
 ├── scripts/
 │   └── validate_dsl.py
+├── .github/
+│   ├── workflows/validate.yml
+│   ├── CONTRIBUTING.md
+│   ├── ISSUE_TEMPLATE/
+│   └── pull_request_template.md
 ├── README.md
 └── README_CN.md
 ```

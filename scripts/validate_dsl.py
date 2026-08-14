@@ -88,7 +88,7 @@ def validate_file(path: Path) -> Report:
 
     version = document.get("version")
     if not isinstance(version, str):
-        report.error("Top-level version must be a string, for example version: \"0.6.0\".")
+        report.error("Top-level version must be a string, for example version: \"0.7.0\".")
 
     if document.get("kind") != "app":
         report.warn("Top-level kind is usually 'app'.")

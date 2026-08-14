@@ -1,10 +1,11 @@
 ---
 name: dify-workflow-dsl
+version: "2.1.0"
 description: >
-  Create, modify, review, and debug Dify Workflow/Chatflow DSL YAML files that can
-  be imported into Dify. Use for Dify app DSL, workflow YAML, advanced-chat YAML,
-  graph nodes/edges, variables, tool nodes, plugin dependencies, database read/write
-  tools, and import/export compatibility questions.
+  Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
+  DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
+  YAML, graph nodes/edges, variables, tool nodes, plugin/marketplace dependencies,
+  database read/write tool nodes, and import/export compatibility.
 ---
 
 # Dify Workflow DSL (Dify 工作流 DSL)
@@ -22,9 +23,10 @@ workflow variables/features, and a ReactFlow-like graph of nodes and edges.
    required inputs, model/provider, installed plugins, knowledge bases, secrets,
    trigger source, and expected outputs. If the user has not chosen a mode, say
    that you will proceed with `workflow` by default unless they prefer Chatflow.
-3. Choose the DSL version. For new DSL, target official Dify app DSL
-   `version: "0.6.0"` unless the user explicitly asks for old-version
-   compatibility. Always write `version` as a YAML string.
+3. Choose the DSL version with the user. For new DSL default to `version:
+   "0.7.0"` (current official). When reviewing an existing file, keep its
+   `version:` unless asked to migrate. See `references/dsl-versions.md` for
+   0.5.x / 0.6.x / 0.7.x guidance. Always write `version` as a YAML string.
 4. Sketch the graph before writing YAML: start/input or trigger, transform/reasoning nodes,
    tools, branches/loops, final `end` or `answer`.
 5. Use stable string node IDs and connect every edge with matching `sourceType`,
@@ -58,9 +60,11 @@ Use this compact intake when creating a workflow from a plain-language request:
 
 Load only the relevant reference files:
 
-- `references/official-0.6-target.md` for official current-version rules from
-  Dify source: DSL version, import/export behavior, dependency types, current node
-  enum, trigger/datasource cautions, and public sample availability.
+- `references/official-target.md` for version-stable official rules from Dify
+  source: export shape, dependency types, current node enum, trigger/datasource
+  cautions, and public sample availability.
+- `references/dsl-versions.md` for choosing the DSL version (0.5.x / 0.6.x /
+  0.7.x, default 0.7.0) and import-compatibility behavior.
 - `references/dsl-structure.md` for top-level YAML, variables, dependencies,
   edges, handles, and import/export rules.
 - `references/node-schemas.md` for node-specific schemas and examples.
@@ -122,7 +126,8 @@ schema in `references/node-schemas.md`. The second column is the `data.type`.
 
 ## Authoring Rules
 
-- For newly generated DSL, use `version: "0.6.0"` and top-level `kind: app`.
+- For newly generated DSL, use `version: "0.7.0"` (or the user's chosen version;
+  see `references/dsl-versions.md`) and top-level `kind: app`.
 - `workflow.graph.nodes` and `workflow.graph.edges` must both exist.
 - Node wrapper `type` is normally `custom`; `data.type` is the real node kind.
 - Every node `id` should be a string. Do not reuse IDs.
@@ -151,6 +156,9 @@ schema in `references/node-schemas.md`. The second column is the `data.type`.
   legacy exports.
 - For public examples, replace tenant-specific icon URLs and credentials with
   placeholders unless they are harmless exported metadata.
+- Use the user's preferred language for node `title` fields; for public/shared
+  examples default to English. Existing bilingual examples may keep their real
+  titles.
 
 ## Schema Pitfalls (常见 Schema 陷阱)
 
@@ -189,7 +197,8 @@ Authoring Rules; cross-check there too.
 Before finalizing a DSL:
 
 - YAML parses cleanly.
-- `version` is a string and `app.mode` matches terminal node type:
+- `version` is a string and matches the user's chosen target (default 0.7.0; see
+  `references/dsl-versions.md`). `app.mode` matches terminal node type:
   non-trigger `workflow` uses `end`, `advanced-chat` uses `answer`, and
   trigger/side-effect workflows document why they may finish at a tool.
 - Dependencies cover all plugin-backed nodes.

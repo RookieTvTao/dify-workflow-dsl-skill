@@ -1,7 +1,8 @@
 # Node Schemas
 
 All snippets below show the `data:` payload. Wrap them with the standard node
-wrapper from `dsl-structure.md`.
+wrapper from `dsl-structure.md`. Model names like `qwen3.5-flash` are
+placeholders — substitute a model available in your workspace.
 
 ## Contents
 

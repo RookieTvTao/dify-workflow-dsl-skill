@@ -16,10 +16,9 @@ needs a conversational Chatflow.
 | Chat input, uploaded chat files, and immediate answer | `advanced-chat` | Uses `sys.query`, `sys.files`, and optional conversation variables |
 | FAQ/support bot with retrieval and multi-turn follow-up | `advanced-chat` | Retrieval + LLM + answer with memory |
 
-If the user does not specify a mode, say: "I will build this as `workflow` by
-default; if you need Chatflow behavior, I will switch it to `advanced-chat`."
-Then proceed unless mode ambiguity would change import-critical inputs or
-terminal nodes.
+If the user does not specify a mode, state that the default is `workflow` and
+offer to switch to `advanced-chat` if Chatflow behavior is needed. Then proceed
+unless mode ambiguity would change import-critical inputs or terminal nodes.
 
 ## Trigger Selection
 

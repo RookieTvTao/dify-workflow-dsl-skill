@@ -1,0 +1,46 @@
+NOTICE
+======
+
+This repository combines content from multiple sources, each with a different
+licensing posture. This file is a provenance and attribution disclosure; it is
+NOT a license grant by itself.
+
+1. Original contributions by RookieTvTao
+-----------------------------------------
+The original work created by the maintainer of this repository — including the
+node routing table, the schema pitfalls, `references/templates.md`, the README
+files, and the engineering/scaffolding files added in this fork
+(`requirements.txt`, `examples/`, `.github/`, CI, etc.) — is licensed under the
+MIT License. See ./LICENSE.
+
+2. Base skill (forked, All Rights Reserved)
+--------------------------------------------
+The base skill — comprising the main `SKILL.md` structure, most of `references/`
+(excluding `templates.md`), `scripts/validate_dsl.py`, `agents/`, and
+`install.sh` — was forked from:
+
+    https://github.com/yzmw123/dify-workflow-dsl-skill
+
+That upstream repository has NO LICENSE file, so its content remains All Rights
+Reserved by default. No copyright claim is made over yzmw123's original work.
+Redistribution of the base portion requires permission from the upstream author.
+
+3. Enhancements adapted from Aeson-skills (MIT)
+-------------------------------------------------
+Concepts for the node routing table, schema pitfalls, and templates were
+adapted from:
+
+    https://github.com/jspi-fu/Aeson-skills
+
+Licensed under the MIT License, Copyright (c) 2025 jspi-fu. The MIT terms are
+retained.
+
+4. Third-party references (interoperability evidence only)
+-----------------------------------------------------------
+References to the Dify source code (github.com/langgenius/dify) and to public
+DSL corpora are used only as interoperability evidence and documentation. They
+do not constitute redistribution of third-party code.
+
+---------------------------------------------------------------------------
+Bottom line: ./LICENSE (MIT) covers ONLY the original contributions described
+in section 1. It does NOT extend to the All-Rights-Reserved base in section 2.
