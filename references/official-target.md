@@ -1,13 +1,16 @@
-# Official 0.6.0 Target
+# Official DSL Target
 
 This reference records what the skill should treat as authoritative for new
-Dify app DSL generation.
+Dify app DSL generation. Version-specific rules (choosing 0.5.x / 0.6.x /
+0.7.x, import behavior) live in `dsl-versions.md`; this file covers the
+version-stable authority: export shape, dependency types, the node enum, and
+sanitization.
 
 ## Contents
 
 - Sources checked
 - Target rule
-- Import and version compatibility
+- Import and version compatibility (see dsl-versions.md)
 - Export shape
 - Export sanitization
 - Dependency types and sources
@@ -33,32 +36,28 @@ Dify app DSL generation.
 
 ## Target Rule
 
-- New generated Dify app DSL should use `version: "0.6.0"`.
+- New generated Dify app DSL should use `version: "0.7.0"` (the current official
+  constant). See `dsl-versions.md` for 0.5.x / 0.6.x targets.
 - Keep `version` quoted. Dify import expects a string and rejects non-string
   values.
 - Use `kind: app`.
 - Prefer graph-based `workflow` and `advanced-chat` modes for new work.
 - Use public DSLs as compatibility and workflow-design evidence only. Most
-  sampled public repositories are legacy exports; a later scan found a small
-  public `0.6.0` sample, but official source remains the target authority.
+  sampled public repositories are legacy exports; official source remains the
+  target authority regardless of the chosen version.
 
 ## Import And Version Compatibility
 
-Dify compares imported DSL version with the current version:
-
-- Same version or same minor/micro-compatible older version: normal import.
-- Older minor version: import can complete with warnings.
-- Older major version or newer-than-current version: import may require user
-  confirmation or migration.
-- Missing `version` is filled as old `0.1.0` by import logic, but generated DSL
-  should never rely on that fallback.
+Version selection and import compatibility now live in `dsl-versions.md`
+(version defaults, 0.5.x / 0.6.x / 0.7.x guidance, and the import-comparison
+rules).
 
 ## Export Shape
 
 Official export builds this top-level structure:
 
 ```yaml
-version: "0.6.0"
+version: "0.7.0"
 kind: app
 app:
   name: "App name"
@@ -217,6 +216,7 @@ Additional scan on 2026-05-11:
 - `g-krishna0/dify-export-test`: 87 parsed app DSL, `0.6.0`: 0
 - `Petrus-Han/dify-usecase-playground`: 3 parsed app DSL, `0.6.0`: 1
 
-Therefore the skill targets 0.6.0 from official source code and uses public YAML
-corpora only for real-world graph patterns, trigger workflow examples, legacy
-import behavior, and tool-node shape diversity.
+Therefore the skill targets the user's chosen version (default 0.7.0, see
+`dsl-versions.md`) from official source code and uses public YAML corpora only
+for real-world graph patterns, trigger workflow examples, legacy import
+behavior, and tool-node shape diversity.

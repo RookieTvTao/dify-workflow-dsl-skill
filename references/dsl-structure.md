@@ -1,7 +1,8 @@
 # Dify DSL Structure
 
 This reference covers app-level structure, graph wiring, variables, dependencies,
-and import/export compatibility.
+and import/export compatibility. Plugin identifiers and checksums in examples are
+sample workspace export values — verify them before importing.
 
 ## Contents
 
@@ -18,10 +19,11 @@ and import/export compatibility.
 
 ## Official Baseline
 
-- Dify's source declares `CURRENT_APP_DSL_VERSION = "0.6.0"`.
+- Dify's source declares `CURRENT_APP_DSL_VERSION = "0.7.0"`.
 - Import expects `version` to be a string.
-- New generated DSL should target `version: "0.6.0"` unless the user explicitly
-  requests compatibility with an older Dify workspace.
+- New generated DSL should target `version: "0.7.0"` (or the user's chosen
+  version; see `dsl-versions.md`) unless they request compatibility with an
+  older Dify workspace.
 - Dify can backfill latest dependencies for very old imports (`<=0.1.5`) when
   `dependencies` is absent. For new DSL, explicit dependencies are safer for
   cross-workspace import.
@@ -57,7 +59,7 @@ app:
   mode: advanced-chat       # workflow | advanced-chat | chat | completion | agent-chat
   use_icon_as_answer_icon: false
 kind: app
-version: "0.6.0"
+version: "0.7.0"
 dependencies: []
 workflow:
   conversation_variables: []
@@ -222,7 +224,7 @@ Canvas note nodes are non-executable annotations:
     height: 120
     selected: false
     showAuthor: false
-    text: "Explain a branch or TODO here."
+    text: "Explain a branch or note here."
     theme: blue
     title: ""
     type: ""

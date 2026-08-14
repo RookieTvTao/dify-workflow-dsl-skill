@@ -2,7 +2,8 @@
 
 This reference distills database read/write patterns from user-provided Dify
 exports. The important takeaway is the tool-node envelope plus safe SQL parameter
-binding.
+binding. Plugin identifiers and checksums below are example values from a sample
+workspace export — verify them against your target workspace before importing.
 
 ## Contents
 
@@ -92,7 +93,7 @@ tool_parameters:
   query:
     type: mixed
     value: |
-      INSERT INTO agent_test.ai_document_parse_record (
+      INSERT INTO your_schema.your_table (
           user_id,
           file_name,
           file_size,
@@ -155,7 +156,7 @@ tool_parameters:
           id,
           file_name,
           document_summary
-      FROM agent_test.ai_document_parse_record
+      FROM your_schema.your_table
       WHERE user_id = $arg0
       ORDER BY created_at ASC;
 selected: false
@@ -187,7 +188,7 @@ tool_parameters:
     value: |
       SELECT EXISTS (
           SELECT 1
-          FROM agent_test.ai_document_parse_record
+          FROM your_schema.your_table
           WHERE user_id = $arg0
             AND file_name = $arg1
       ) AS file_exists;
@@ -263,7 +264,7 @@ Generate SQL only. If the document cannot be determined, output an empty string.
 Rules:
 - SELECT only.
 - Query only whitelisted fields: json_table_content.
-- Table: agent_test.ai_document_parse_record.
+- Table: your_schema.your_table.
 - Always include user_id = '{{#sys.user_id#}}' or a parameter-bound equivalent.
 - Match file_name exactly from the provided list. Do not invent file names.
 - No markdown fences, no explanation.

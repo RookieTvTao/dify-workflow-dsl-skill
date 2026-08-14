@@ -1,9 +1,11 @@
 # Templates (模板)
 
 Starter graph skeletons you can adapt, then complete with the patterns in
-`SKILL.md` and the node schemas in `node-schemas.md`. All target
-`version: "0.6.0"`. Replace model providers, dataset IDs, and tool identifiers
-with values exported from your target Dify workspace before importing.
+`SKILL.md` and the node schemas in `node-schemas.md`. All target the user's
+chosen version (default `0.7.0`). Replace model providers, dataset IDs, and tool
+identifiers with values exported from your target Dify workspace before
+importing. Model names like `qwen3.5-flash` are placeholders — substitute a
+model available in your workspace.
 
 ## How to use (使用方法)
 
@@ -31,7 +33,7 @@ with values exported from your target Dify workspace before importing.
 Shape: `Start -> LLM -> Answer` (advanced-chat).
 
 ```yaml
-version: "0.6.0"
+version: "0.7.0"
 kind: app
 app:
   name: "Simple Chatbot"
@@ -120,7 +122,7 @@ and the assistant cites retrieved context.
 Shape: `Start -> Knowledge Retrieval -> LLM (context enabled) -> Answer`.
 
 ```yaml
-version: "0.6.0"
+version: "0.7.0"
 kind: app
 app:
   name: "RAG Chatbot"
@@ -212,7 +214,7 @@ below shows two classifier branches re-joined by a Variable Aggregator. Extend e
 branch with the nodes it needs (tool, knowledge-retrieval, code).
 
 ```yaml
-version: "0.6.0"
+version: "0.7.0"
 kind: app
 app:
   name: "Router Agent"
@@ -338,7 +340,7 @@ returned as a result. Shown as a one-shot `workflow` ending at `end` — switch 
 Shape: `Start (text input) -> LLM -> End`.
 
 ```yaml
-version: "0.6.0"
+version: "0.7.0"
 kind: app
 app:
   name: "EN->ZH Translator"
