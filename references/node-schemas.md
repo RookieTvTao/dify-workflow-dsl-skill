@@ -192,6 +192,11 @@ selected: false
 Use after an LLM when you need a strict structured field before an `if-else` or
 tool call.
 
+Note: this node's query-input field is `query` (an array selector). It differs
+from the `query_variable_selector` used by question-classifier and
+knowledge-retrieval — that asymmetry is Dify's design, not a mistake to
+"correct" when reviewing files.
+
 ## http-request
 
 ```yaml
@@ -211,9 +216,12 @@ body:
 authorization:
   type: no-auth
 timeout:
-  connect: 10
-  read: 60
-  write: 10
+  connect: 10            # actual timeout values (seconds)
+  read: 30
+  write: 30
+  max_connect_timeout: 10    # caps allowed by this Dify deployment
+  max_read_timeout: 300
+  max_write_timeout: 300
 retry_config:
   retry_enabled: false
 selected: false
@@ -254,19 +262,27 @@ Use to merge mutually exclusive branch outputs before `end`.
 
 ## assigner / variable-assigner
 
+Current generation targets the v2 shape (node-level `version: "2"`; verified
+against Dify `variable_assigner/v2` source):
+
 ```yaml
 title: "写入会话变量"
 type: assigner
+version: "2"
 items:
-  - variable_selector: [conversation, Memory]
-    input_type: variable
-    value_selector: ["1770000000001", output]
-    operation: over-write
+  - variable_selector: [conversation, Memory]   # target variable to write
+    input_type: variable                        # variable | constant
+    operation: over-write                       # see operations below
+    value: ["1770000000001", output]            # selector when variable; literal when constant
 selected: false
 ```
 
-Some newer exports use `variable-assigner`; follow the target workspace export
-style if editing an existing file.
+`operation` values: `over-write`, `append`, `extend`, `clear`, `set`,
+`add`, `subtract`, `multiply`, `divide`, `remove-first`, `remove-last`.
+
+Legacy v1 exports instead use `write_mode` + `assigned_variable_selector` +
+`input_variable_selector`. Recognize that shape when reviewing old files; do
+not generate it for new DSL.
 
 ## document-extractor
 
@@ -365,10 +381,10 @@ agent_parameters:
     type: constant
     value:
       provider: langgenius/tongyi/tongyi
-      name: qwen3.5-flash
+      model: qwen3.5-flash
       mode: chat
-      completion_params:
-        temperature: 0.3
+      model_type: llm
+      type: model-selector
   query:
     type: constant
     value: "{{#sys.query#}}"
@@ -381,6 +397,11 @@ agent_parameters:
 output_schema: null
 selected: false
 ```
+
+Agent parameter shapes are dictated by the strategy plugin's parameter
+declarations: `model` is declared `model-selector`, so its value uses the
+`provider`/`model`/`model_type`/`type: model-selector` shape above. Do not copy
+the plain `llm` node's `name`/`completion_params` shape into agent parameters.
 
 ## iteration
 

@@ -15,8 +15,10 @@ model available in your workspace.
 
 ## Node ID and layout conventions
 
-- Node `id`: 13-digit timestamp string, quoted (e.g. `"1711536487001"`). Increment
-  by a few thousand between nodes to mimic real IDs.
+- Node `id`: any unique quoted string works (the validator only requires a
+  string, never reused). Real exports commonly use 13-digit timestamps
+  (e.g. `"1711536487001"`); templates here follow that style, while
+  `complete-examples.md` uses shorter readable IDs for clarity.
 - Start position `{x: 80, y: 282}`; each subsequent column `x + 300`; parallel
   branches offset `y + 200`.
 - Edge `id`: `{source}-source-{target}-target`. Linear edges use
