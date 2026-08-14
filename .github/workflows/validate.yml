@@ -1,0 +1,28 @@
+name: Validate DSL examples
+
+on:
+  push:
+    paths:
+      - 'examples/**'
+      - 'scripts/validate_dsl.py'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'scripts/validate_dsl.py'
+      - '.github/workflows/validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt
+      - run: python scripts/validate_dsl.py examples/*.yml

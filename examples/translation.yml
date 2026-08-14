@@ -1,0 +1,121 @@
+app:
+  name: "中英翻译"
+  description: "将中文翻译成英文"
+  icon: "🌐"
+  icon_type: emoji
+  icon_background: "#E4FBCC"
+  mode: workflow
+  use_icon_as_answer_icon: false
+kind: app
+version: "0.7.0"
+dependencies: []
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      image:
+        enabled: false
+      enabled: false
+    opening_statement: ""
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: llm
+      id: 1000001-source-1000002-target
+      source: "1000001"
+      sourceHandle: source
+      target: "1000002"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1000002-source-1000003-target
+      source: "1000002"
+      sourceHandle: source
+      target: "1000003"
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: "开始"
+        type: start
+        variables:
+          - label: "中文文本"
+            variable: chinese_text
+            type: paragraph
+            required: true
+            max_length: 5000
+      height: 120
+      id: "1000001"
+      position: { x: 30, y: 300 }
+      positionAbsolute: { x: 30, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "翻译"
+        type: llm
+        model:
+          provider: deepseek
+          name: deepseek-chat
+          mode: chat
+          completion_params:
+            temperature: 0.3
+        prompt_template:
+          - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            role: system
+            text: "你是一个专业的中英翻译。只输出翻译结果，不要解释。"
+          - id: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+            role: user
+            text: "请将以下中文翻译成英文：\n\n{{#1000001.chinese_text#}}"
+        context:
+          enabled: false
+          variable_selector: []
+        variables: []
+        vision:
+          enabled: false
+        selected: false
+      height: 98
+      id: "1000002"
+      position: { x: 334, y: 300 }
+      positionAbsolute: { x: 334, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: "结束"
+        type: end
+        outputs:
+          - value_selector: ["1000002", text]
+            variable: translation
+          - value_selector: ["1000001", chinese_text]
+            variable: original
+      height: 90
+      id: "1000003"
+      position: { x: 638, y: 300 }
+      positionAbsolute: { x: 638, y: 300 }
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport: { x: 50, y: 200, zoom: 0.8 }
