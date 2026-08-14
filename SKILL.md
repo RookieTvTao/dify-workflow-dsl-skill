@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.1.0"
+version: "2.2.0"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -118,8 +118,10 @@ schema in `references/node-schemas.md`. The second column is the `data.type`.
 - **Database access**: prefer parameterized tool calls (`$arg0`, `$arg1`, ...)
   over interpolated SQL. For LLM-generated SQL, restrict to SELECT unless the
   user explicitly asks for writes and accepts the risk.
-- **Model/provider**: keep provider names exactly as Dify exports them, for example
-  `langgenius/tongyi/tongyi`, `openai`, or a marketplace provider path.
+- **Model/provider**: for new DSL prefer the three-segment plugin form
+  (`langgenius/openai/openai`, `langgenius/deepseek/deepseek`). Bare names
+  (`openai`, `deepseek`) appear only in legacy built-in-provider exports — keep
+  them when reviewing old files, avoid them when generating.
 - **New plugin tools**: do not promise import-and-run reliability from a tool name
   alone. Ask for a minimal exported DSL or plugin source/package when exact
   `provider_id`, `tool_name`, parameters, and authorization schema are unknown.

@@ -90,6 +90,21 @@ bash install.sh --platform claude      # 或 codex / openclaw / hermes / all
 > `install.sh` 只把 `SKILL.md`、`references/`、`scripts/`、`agents/` 复制到目标 skills
 > 目录;已安装过可加 `--force` 覆盖。
 
+### 离线 / zip 安装
+
+适用于无法访问 GitHub 的同事(在外部 agent 中生成 DSL,再导入内网 Dify):
+
+1. **制包**(在有克隆的机器上):`git archive --format=zip -o
+   dify-workflow-dsl-skill.zip HEAD` —— 只含 git 跟踪文件,不含 `.git/`。
+   也可手动压缩文件夹,排除 `.git/`。
+2. **安装**:解压后把 `SKILL.md`、`references/`、`scripts/`、`agents/` 拷入你的
+   agent skills 目录(如 `~/.claude/skills/dify-workflow-dsl/`)。有 bash 环境可
+   `bash install.sh --platform claude` 等效完成;Windows 无 Git Bash 时直接手动拷贝
+   这 4 项即可。
+3. **校验脚本**:需要 `pip install pyyaml`(见 `requirements.txt`)。
+4. **导入内网 Dify 前**:先确认服务端 Dify 版本(Web 界面 → 关于/系统信息,或问
+   管理员),并告知 agent,以便选对 DSL 版本(见 `references/dsl-versions.md`)。
+
 ## 校验
 
 先安装依赖,再校验:

@@ -13,6 +13,9 @@ sanitization), see `official-target.md`.
    non-string values.
 4. If the user names a Dify release, match it; otherwise ask once and proceed
    with `0.7.0`.
+5. For self-hosted / intranet Dify, confirm the server version first (visible
+   in the Dify web UI under About / system info, or ask the admin) and target
+   that version. External Dify Cloud is normally current (`0.7.0`).
 
 ## Quick reference
 

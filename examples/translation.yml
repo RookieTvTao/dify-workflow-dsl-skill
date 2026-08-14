@@ -75,7 +75,7 @@ workflow:
         title: "翻译"
         type: llm
         model:
-          provider: deepseek
+          provider: langgenius/deepseek/deepseek
           name: deepseek-chat
           mode: chat
           completion_params:
