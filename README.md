@@ -103,6 +103,24 @@ bash install.sh --platform claude      # or codex / openclaw / hermes / all
 > into the target skills directory; re-run with `--force` to overwrite a prior
 > install.
 
+### Offline / zip installation
+
+For colleagues without GitHub access (e.g. generating DSL with an external
+agent, then importing into an intranet Dify):
+
+1. **Make the zip** (from a clone): `git archive --format=zip -o
+   dify-workflow-dsl-skill.zip HEAD` — contains exactly the tracked files, no
+   `.git/`. Or zip the folder manually, excluding `.git/`.
+2. **Install**: unzip, then copy `SKILL.md`, `references/`, `scripts/`, and
+   `agents/` into your agent's skills directory (e.g.
+   `~/.claude/skills/dify-workflow-dsl/`). With bash available, `bash
+   install.sh --platform claude` does the same; on Windows without Git Bash,
+   the manual copy is all it takes.
+3. **Validator**: needs `pip install pyyaml` (see `requirements.txt`).
+4. **Before importing into intranet Dify**: confirm the server's Dify version
+   (web UI → About/system info, or ask the admin) and tell the agent, so it
+   targets the right DSL version (see `references/dsl-versions.md`).
+
 ## Validation
 
 Install the dependency first, then validate:

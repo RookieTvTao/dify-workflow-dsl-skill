@@ -92,7 +92,7 @@ workflow:
         title: "翻译"
         type: llm
         model:
-          provider: deepseek
+          provider: langgenius/deepseek/deepseek
           name: deepseek-chat
           mode: chat
           completion_params:
@@ -292,7 +292,7 @@ workflow:
         title: "代码分析"
         type: llm
         model:
-          provider: deepseek
+          provider: langgenius/deepseek/deepseek
           name: deepseek-chat
           mode: chat
           completion_params:
@@ -320,7 +320,7 @@ workflow:
         title: "文本分析"
         type: llm
         model:
-          provider: deepseek
+          provider: langgenius/deepseek/deepseek
           name: deepseek-chat
           mode: chat
           completion_params:
