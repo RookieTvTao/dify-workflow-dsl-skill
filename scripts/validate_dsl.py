@@ -234,6 +234,17 @@ def validate_node(report: Report, node_id: str, data: dict[str, Any]) -> None:
             if SQL_MUTATING_RE.search(sql):
                 report.warn(f"Tool node {node_id} ({title}) SQL mutates data; confirm this is intentional.")
 
+    elif node_type == "agent":
+        for key in ("agent_strategy_provider_name", "agent_strategy_name", "agent_parameters"):
+            if data.get(key) in (None, ""):
+                report.error(f"Agent node {node_id} ({title}) missing {key}.")
+        agent_params = as_dict(data.get("agent_parameters"))
+        if agent_params and "model" not in agent_params:
+            report.warn(
+                f"Agent node {node_id} ({title}) agent_parameters missing 'model' "
+                "(required by all official strategies)."
+            )
+
     elif node_type == "if-else":
         if not isinstance(data.get("cases"), list):
             report.error(f"If-else node {node_id} ({title}) missing cases list.")

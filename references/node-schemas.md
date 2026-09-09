@@ -403,6 +403,67 @@ declarations: `model` is declared `model-selector`, so its value uses the
 `provider`/`model`/`model_type`/`type: model-selector` shape above. Do not copy
 the plain `llm` node's `name`/`completion_params` shape into agent parameters.
 
+Official `langgenius/agent` strategies (declaration verified 2026-09, v0.0.47):
+
+| Parameter | Declared type | Required | `function_calling` | `ReAct` |
+| --- | --- | --- | --- | --- |
+| `model` | model-selector | yes | ✓ | ✓ |
+| `tools` | array[tools] | yes | ✓ | ✓ |
+| `instruction` | string | yes | ✓ | ✓ |
+| `query` | string | yes | ✓ | ✓ |
+| `maximum_iterations` | number | yes | ✓ | ✓ |
+| `allowed_tools` | any | no | ✓ | ✓ |
+| `context` | any | no | ✓ | ✓ |
+| `files` | any | no | ✓ | — |
+
+`ReAct` variant (same envelope, different strategy identity):
+
+```yaml
+title: "Agent (ReAct)"
+type: agent
+agent_strategy_provider_name: langgenius/agent/agent
+agent_strategy_name: ReAct
+agent_strategy_label: ReAct
+agent_parameters:
+  model:
+    type: constant
+    value:
+      provider: langgenius/tongyi/tongyi
+      model: qwen3.5-flash
+      mode: chat
+      model_type: llm
+      type: model-selector
+  tools:
+    type: constant
+    value: []
+  instruction:
+    type: constant
+    value: "Answer step by step with tool support when useful."
+  query:
+    type: constant
+    value: "{{#sys.query#}}"
+  maximum_iterations:
+    type: constant
+    value: 5
+output_schema: null
+selected: false
+```
+
+Notes:
+
+- The agent node works in both `workflow` and `advanced-chat`. In `workflow`
+  there is no `sys.query` — bind `query` to a start variable instead
+  (`{{#<start_id>.<var>#}}`).
+- Strategy names/labels are case-sensitive as declared (`ReAct`, not `react`).
+  Third-party strategy plugins exist on the marketplace; fetch their
+  declarations via the public API (see `plugin-marketplace-tools.md`) instead
+  of guessing parameter shapes.
+- The node needs the strategy plugin in `dependencies`
+  (`marketplace_plugin_unique_identifier` = the plugin's
+  `latest_package_identifier`).
+- Agent node output fields for downstream selectors: `text`, `json`, `files`,
+  `usage`, plus any fields the strategy declares in `output_schema`.
+
 ## iteration
 
 ```yaml

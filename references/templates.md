@@ -459,3 +459,116 @@ Key rules, each earned from real write-flow failures:
 This pattern composes with template 3 (Agent) when preparation needs tools,
 and with `database-tools.md` when the write target is SQL (keep writes
 parameterized; prefer draft/staging tables).
+
+## 6. Agent node (agent 节点最小示例)
+
+**Match when:** the workflow needs an autonomous LLM + tools loop via a strategy
+plugin (`langgenius/agent`: `function_calling` or `ReAct`), instead of a
+hand-wired classifier flow (template 3). Works in `workflow` and
+`advanced-chat`; shown here as a one-shot `workflow`.
+
+Shape: `Start (query) -> Agent -> End`. The dependency identifier below was
+current at authoring time (v0.0.47) — re-fetch `latest_package_identifier` via
+the marketplace API (`plugin-marketplace-tools.md`) before importing, and
+install/authorize the plugin in the target workspace first.
+
+```yaml
+version: "0.7.0"
+kind: app
+app:
+  name: "Agent Node Demo"
+  mode: workflow
+  description: "Start -> Agent (function_calling) -> End."
+  icon: "🤖"
+  icon_type: emoji
+  icon_background: "#FFEAD5"
+  use_icon_as_answer_icon: false
+dependencies:
+  - current_identifier: null
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: langgenius/agent:0.0.47@b14b5a5259094510a272e5b7facd09aa63352511c13fabcde36a4cac57d1da94
+      version: null
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload: { enabled: false }
+    opening_statement: ""
+    retriever_resource: { enabled: false }
+    sensitive_word_avoidance: { enabled: false }
+    speech_to_text: { enabled: false }
+    suggested_questions: []
+    suggested_questions_after_answer: { enabled: false }
+    text_to_speech: { enabled: false }
+  graph:
+    nodes:
+      - id: "1711536487001"
+        type: custom
+        position: { x: 80, y: 282 }
+        data:
+          type: start
+          title: "Start"
+          variables:
+            - label: "问题"
+              variable: query
+              type: paragraph
+              required: true
+              max_length: 480
+      - id: "1711536522001"
+        type: custom
+        position: { x: 380, y: 282 }
+        data:
+          type: agent
+          title: "Agent"
+          desc: ""
+          agent_strategy_provider_name: langgenius/agent/agent
+          agent_strategy_name: function_calling
+          agent_strategy_label: FunctionCalling
+          agent_parameters:
+            model:
+              type: constant
+              value:
+                provider: langgenius/tongyi/tongyi
+                model: qwen3.5-flash
+                mode: chat
+                model_type: llm
+                type: model-selector
+            query:
+              type: constant
+              value: "{{#1711536487001.query#}}"
+            instruction:
+              type: constant
+              value: "Answer the user's question. Use tools when they help."
+            tools:
+              type: constant
+              value: []
+            maximum_iterations:
+              type: constant
+              value: 5
+          output_schema: null
+          selected: false
+      - id: "1711536558001"
+        type: custom
+        position: { x: 680, y: 282 }
+        data:
+          type: end
+          title: "End"
+          outputs:
+            - variable: result
+              value_selector: ["1711536522001", text]
+    edges:
+      - { id: "1711536487001-source-1711536522001-target", source: "1711536487001", sourceHandle: source, target: "1711536522001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: start, targetType: agent, isInIteration: false, isInLoop: false } }
+      - { id: "1711536522001-source-1711536558001-target", source: "1711536522001", sourceHandle: source, target: "1711536558001", targetHandle: target, type: custom, zIndex: 0, data: { sourceType: agent, targetType: end, isInIteration: false, isInLoop: false } }
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+```
+
+Variations:
+
+- **Chatflow**: set `mode: advanced-chat`, replace the `end` node with
+  `answer`, and bind `query` to `{{#sys.query#}}`.
+- **ReAct strategy**: switch `agent_strategy_name`/`agent_strategy_label` to
+  `ReAct`; parameter set is identical minus `files` (see `node-schemas.md#agent`).
+- **Tools**: add installed tools to `agent_parameters.tools`; entries follow
+  the tool node identity fields (`plugin`/`provider`/`tool_name`/`parameters`).
+  `tools: []` gives an LLM-only loop with no tool calls.

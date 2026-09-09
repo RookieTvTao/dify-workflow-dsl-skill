@@ -32,15 +32,16 @@ All-Rights-Reserved base.
 
 On top of yzmw123's original (all `references/` and the validator kept), this version adds:
 
-- **Node Routing Table**: a 15-row quick-pick table in SKILL.md mapping each use case
+- **Node Routing Table**: a 16-row quick-pick table in SKILL.md mapping each use case
   to a node `data.type` and its key fields, pointing into `references/node-schemas.md`.
 - **Schema Pitfalls**: the 6 field-shape mistakes most likely to break import —
   variable-list shape differs by node, `memory` is chatflow-only, `end.outputs` vs
   `code.outputs` differ in shape, iteration needs sizing in two places plus child-wiring
   rules, `output_type` must match the real element type, and `dataset_ids` are
   tenant-bound while `code_language` is required.
-- **`references/templates.md`**: 5 starter templates — 4 import-ready skeletons
-  (chatbot / RAG / agent / translation) plus the side-effect safety pattern
+- **`references/templates.md`**: 5 import-ready skeletons (chatbot / RAG /
+  agent classifier-flow / translation / agent node) with full nodes, edges, and
+  layout coordinates, plus the side-effect safety pattern
   (status-classified branching, `unknown` never auto-retries, human confirm,
   read-back verify) for write workflows.
 - **Multi-version support**: target 0.5.x / 0.6.x / 0.7.x with a verified
@@ -68,6 +69,13 @@ On top of yzmw123's original (all `references/` and the validator kept), this ve
   Datasource, trigger nodes, and more.
 - Wire node IDs, graph edges, and branch handles correctly.
 - Add marketplace / package / GitHub plugin dependencies.
+- Look up Dify Marketplace plugins via the public API (manifest index + batch
+  declarations + `.difypkg` download) and assemble tool/agent nodes from live
+  declarations — exact tool names, parameter schemas, credentials schema, and
+  the current dependency identifier.
+- Generate agent nodes (`langgenius/agent` `function_calling` / `ReAct`, plus
+  third-party strategies via their declarations) in both `workflow` and
+  `advanced-chat`.
 - Build database read/write workflows, including `spance/db_client_node` and
   `hjlarry/database` patterns.
 - Review existing DSL for import risks and behavioral bugs.

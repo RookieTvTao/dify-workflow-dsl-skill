@@ -6,6 +6,7 @@ by local exported examples.
 ## Contents
 
 - Reliability ladder
+- Marketplace public API lookup
 - Preferred workflow for new tools
 - Tool node identity template
 - `paramSchemas` guidance
@@ -18,13 +19,95 @@ by local exported examples.
 | --- | --- | --- |
 | Minimal exported DSL from the user's Dify workspace | Highest | Copy the node envelope, dependency, `paramSchemas`, `tool_configurations`, and `tool_parameters`; then adapt values only. |
 | Plugin source repo or `.difypkg` package | High | Read `manifest.yaml`, provider YAML, tool YAML, and Python implementation; infer the DSL node and warn that import should still be tested. |
+| Marketplace batch-API declaration | Medium-high | Fetch the live declaration (see next section): exact tool names, full parameter schemas, credentials schema, and the current `latest_package_identifier`. Version may differ from the workspace's installed one — still needs an import test. |
 | Official marketplace page only | Medium | Use visible plugin/version/tool info if available, but mark the node as a candidate because parameter schema and authorization details may be incomplete. |
 | Tool name only | Low | Do not claim it will work. Ask for an export, source/package, or screenshot. Generate only a placeholder/draft if the user explicitly accepts the risk. |
+
+## Marketplace Public API Lookup (公开 API 检索)
+
+No login required. All three endpoints verified 2026-09 against
+`https://marketplace.dify.ai`. Use this whenever the user names a tool/plugin
+but cannot provide an export — it upgrades a "tool name only" request to
+near-source fidelity in two requests.
+
+### 1. Search: fetch the index once, grep locally
+
+There is **no public keyword-search endpoint** (`/api/v1/plugins?search=…`
+style URLs return 404). The full index is public instead:
+
+```bash
+curl -s https://marketplace.dify.ai/api/v1/dist/plugins/manifest.json -o manifest.json
+```
+
+~950 plugins, ~800 KB. Each entry carries `org`, `name`, `latest_version`,
+`latest_package_identifier`, `latest_package_url`, `updated_at`. The
+`plugin_id` used by the other endpoints is `"<org>/<name>"`. Grep for the
+keyword against `name`/`org` (e.g. `jq '.plugins[] | select(.name | test("tavily"; "i")) or select(.org | test("tavily"; "i"))' manifest.json`).
+
+### 2. Detail: batch-fetch declarations
+
+```bash
+curl -s -X POST https://marketplace.dify.ai/api/v1/plugins/batch \
+  -H "Content-Type: application/json" \
+  -H "X-Dify-Version: 1.17.0" \
+  -d '{"plugin_ids": ["langgenius/tavily"]}'
+```
+
+The `X-Dify-Version` header is required. Response `data.plugins[]` includes:
+
+- `label` / `brief` / `introduction` — what the plugin does (multilingual).
+- `latest_package_identifier` — the exact value for the dependency's
+  `marketplace_plugin_unique_identifier`.
+- `tool` (tool plugins) — `credentials_schema` (what authorization needs) and
+  `tools[]`, each with `identity.name` (→ `tool_name`), labels, and the full
+  `parameters[]` list (name, type, `form`, required, defaults).
+- `agent_strategy` (agent-strategy plugins) — provider `identity.name` and
+  `strategies[]` with `identity.name` (→ `agent_strategy_name`) plus their
+  `parameters[]`. Example: `langgenius/agent` ships `function_calling` and
+  `ReAct`.
+- `model`, `resource`, `endpoint` blocks for other plugin types.
+
+### 3. Package: download the `.difypkg` at source fidelity
+
+```bash
+curl -sL -o plugin.difypkg \
+  "https://marketplace.dify.ai/api/v1/plugins/download-url?unique_identifier=<latest_package_identifier>"
+```
+
+Returns an HTML redirect to a signed URL; `-L` follows it. The `.difypkg` is a
+zip — unzip and read the provider/tool YAML directly (same reliability as the
+"plugin source repo" rung above).
+
+### Mapping to the DSL node
+
+- `tools[].identity.name` → `tool_name`
+- `parameters` with `form: llm` → `tool_parameters` (values via selectors)
+- `parameters` with `form: form` → `tool_configurations`
+- plugin `org/name` + provider name → `provider_id` / `provider_name`
+  (`org/name/<provider>`, e.g. `langgenius/tavily/tavily`)
+- `latest_package_identifier` → dependency
+  `marketplace_plugin_unique_identifier`
+- `agent_strategy.strategies[].identity.name` → `agent_strategy_name`;
+  strategy `parameters[]` → `agent_parameters` shapes
+  (model-selector / array[tools] / string / number — see `node-schemas.md#agent`)
+
+### Caveats
+
+- The declaration describes the **latest published** version; the user's
+  workspace may have an older one installed. An export from the target
+  workspace still outranks this.
+- A plugin listed here may still be absent from the target workspace —
+  installation and authorization remain user actions (see
+  `import-troubleshooting.md`).
+- Identifiers go stale as plugins publish new versions; re-fetch
+  `latest_package_identifier` instead of caching one in generated DSL.
 
 ## Preferred Workflow For New Tools
 
 1. Ask for a minimal export when possible: create a blank Dify workflow, add the
    target tool node, configure authorization and one sample parameter, export DSL.
+   If no export is possible, look the plugin up via the public API (previous
+   section) instead of guessing fields.
 2. Extract these fields from the export:
    `dependencies`, `provider_id`, `provider_name`, `provider_type`, `plugin_id`,
    `plugin_unique_identifier`, `tool_name`, `tool_label`, `tool_description`,
