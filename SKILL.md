@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.2.0"
+version: "2.3.0"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -23,6 +23,10 @@ workflow variables/features, and a ReactFlow-like graph of nodes and edges.
    required inputs, model/provider, installed plugins, knowledge bases, secrets,
    trigger source, and expected outputs. If the user has not chosen a mode, say
    that you will proceed with `workflow` by default unless they prefer Chatflow.
+   When tool or LLM nodes are involved, ask for the target workspace inventory
+   (installed plugins, configured tools, available model providers) and build
+   only from that list — tool suggestions the workspace cannot resolve are the
+   top source of import/run errors.
 3. Choose the DSL version with the user. For new DSL default to `version:
    "0.7.0"` (current official). When reviewing an existing file, keep its
    `version:` unless asked to migrate. See `references/dsl-versions.md` for
@@ -40,6 +44,10 @@ workflow variables/features, and a ReactFlow-like graph of nodes and edges.
    pages. Be explicit about reliability when exact tool schemas are unavailable.
 8. Validate locally with `python3 scripts/validate_dsl.py <file.yml>` before giving
    the user the YAML path.
+9. When the user reports a Dify import error or runtime failure, run a fix loop:
+   match the error against `references/import-troubleshooting.md` (or reason from
+   the error text), patch the YAML, re-validate, and hand back. Import-test
+   feedback from the real workspace outranks static validation.
 
 ## New DSL Intake
 
@@ -75,6 +83,8 @@ Load only the relevant reference files:
   trigger style, and node combinations from business requirements.
 - `references/plugin-marketplace-tools.md` for defining new plugin tool nodes from
   Dify Marketplace, GitHub plugin repos, `.difypkg` packages, or minimal exports.
+- `references/import-troubleshooting.md` for the import/run error → cause → fix
+  loop when the user reports a Dify failure.
 - `references/real-world-yml-study.md` for observations from 262 parsed public
   Dify app DSL files, an AI DSL generator project, and representative samples.
   These samples are real-world compatibility evidence, not the target version
@@ -193,6 +203,13 @@ Authoring Rules; cross-check there too.
    Iteration `output_type` (and any list/operator `var_type`) must match what the
    selector returns: `array[string]`, `array[number]`, `array[file]`, etc. A
    mismatch breaks runtime variable resolution even when import succeeds.
+6. **`dataset_ids` are tenant-bound; `code_language` is required. / dataset_ids 跨租户失效；code_language 必填。**
+   Exported `knowledge-retrieval` nodes carry dataset IDs that only resolve in
+   the exporting tenant. The DSL imports elsewhere, but retrieval fails until
+   the user re-selects the dataset in the target workspace — say so explicitly
+   instead of promising a working RAG node. Never hand-craft dataset IDs. Code
+   nodes must set `code_language: python3` (or `javascript`); a missing
+   `code_language` breaks the node even when `code` is present.
 
 ## Validation Checklist
 

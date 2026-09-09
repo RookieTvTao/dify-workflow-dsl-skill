@@ -34,14 +34,22 @@ On top of yzmw123's original (all `references/` and the validator kept), this ve
 
 - **Node Routing Table**: a 15-row quick-pick table in SKILL.md mapping each use case
   to a node `data.type` and its key fields, pointing into `references/node-schemas.md`.
-- **Schema Pitfalls**: the 5 field-shape mistakes most likely to break import —
+- **Schema Pitfalls**: the 6 field-shape mistakes most likely to break import —
   variable-list shape differs by node, `memory` is chatflow-only, `end.outputs` vs
   `code.outputs` differ in shape, iteration needs sizing in two places plus child-wiring
-  rules, and `output_type` must match the real element type.
-- **`references/templates.md`**: 4 import-ready skeleton templates (chatbot / RAG /
-  agent / translation) with full nodes, edges, and layout coordinates.
-- **Multi-version support**: target 0.5.x / 0.6.x / 0.7.x (default 0.7.0); see
+  rules, `output_type` must match the real element type, and `dataset_ids` are
+  tenant-bound while `code_language` is required.
+- **`references/templates.md`**: 5 starter templates — 4 import-ready skeletons
+  (chatbot / RAG / agent / translation) plus the side-effect safety pattern
+  (status-classified branching, `unknown` never auto-retries, human confirm,
+  read-back verify) for write workflows.
+- **Multi-version support**: target 0.5.x / 0.6.x / 0.7.x with a verified
+  Dify-release ↔ DSL-version mapping (DSL `0.7.0` ships with Dify ≥ 1.16.0;
+  ≤ 1.15 stays on `0.6.0`) and a re-verification protocol; see
   `references/dsl-versions.md`.
+- **`references/import-troubleshooting.md`**: an import/run error → cause → fix
+  loop for when Dify reports failures, including tenant-bound `dataset_ids` and
+  the workspace-inventory-first intake rule.
 - **Engineering**: `requirements.txt`, an `examples/` corpus validated by a
   `validate` GitHub Actions workflow, and contribution templates.
 - Bilingual (EN / 中文) headings and key terms.
@@ -157,12 +165,13 @@ trailing commas in `INSERT` column lists.
 │   ├── complete-examples.md
 │   ├── database-tools.md
 │   ├── dsl-structure.md
-│   ├── dsl-versions.md     # ← version selection (0.5/0.6/0.7)
+│   ├── dsl-versions.md     # ← version selection + release mapping
+│   ├── import-troubleshooting.md  # ← import/run error fix loop
 │   ├── node-schemas.md
 │   ├── official-target.md
 │   ├── plugin-marketplace-tools.md
 │   ├── real-world-yml-study.md
-│   ├── templates.md
+│   ├── templates.md        # ← 4 skeletons + side-effect safety pattern
 │   └── usecase-node-selection.md
 ├── scripts/
 │   └── validate_dsl.py

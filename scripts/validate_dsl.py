@@ -204,6 +204,8 @@ def validate_node(report: Report, node_id: str, data: dict[str, Any]) -> None:
 
     elif node_type == "code":
         code = data.get("code")
+        if data.get("code_language") in (None, ""):
+            report.error(f"Code node {node_id} ({title}) missing code_language ('python3' or 'javascript').")
         code_language = str(data.get("code_language") or "python3").lower()
         if not isinstance(code, str):
             report.error(f"Code node {node_id} ({title}) missing code string.")
@@ -235,6 +237,13 @@ def validate_node(report: Report, node_id: str, data: dict[str, Any]) -> None:
     elif node_type == "if-else":
         if not isinstance(data.get("cases"), list):
             report.error(f"If-else node {node_id} ({title}) missing cases list.")
+
+    elif node_type == "knowledge-retrieval":
+        if as_list(data.get("dataset_ids")):
+            report.warn(
+                f"Knowledge-retrieval node {node_id} ({title}): dataset_ids are tenant-bound; "
+                "after cross-workspace import the user must re-select the dataset."
+            )
 
     elif node_type == "start":
         variables = as_list(data.get("variables"))

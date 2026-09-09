@@ -412,3 +412,50 @@ workflow:
 
 This `workflow` LLM has **no `memory`** block and no `sys.query` — both are
 chatflow-only. See the Schema Pitfalls in `SKILL.md`.
+
+## 5. Side-effect safety pattern (写操作安全模式)
+
+**Match when:** the workflow writes to the outside world — ERP/CRM records,
+database inserts, payments, outgoing messages. This is the pattern proven by
+conversation-driven workflow builders that compile-then-fix against a real
+Dify instance (e.g. an AgentGen-style e2e loop over order-to-cache flows).
+
+A plain `Start -> HTTP write -> End` is not acceptable for side effects. Use
+this shape instead:
+
+```
+Start -> validate input -> JSON-valid? --no--> End (reject, with reason)
+                          |--yes-> lookup/prepare -> exists? --yes--> human confirm
+                                                            |--no--> create path ─┘
+human confirm -> write (draft) -> status branch:
+    success      -> read back -> matches? -> End (ok)
+    auth_error   -> End (auth failure, user action)
+    failed       -> End (failure, safe to retry manually)
+    unknown      -> End (UNKNOWN — never auto-retry; result is indeterminate)
+```
+
+Key rules, each earned from real write-flow failures:
+
+1. **Classify outcomes, don't binary-branch.** After a write call, branch on
+   `success / failed / auth_error / unknown` (in an `if-else` over a Code node
+   that parses the response). `unknown` (timeout, truncated response, unclear
+   body) must **never auto-retry** — a retry may double-write. Route it to a
+   human with the request ID.
+2. **Human confirmation before the write.** Insert a confirmation step
+   (operator review of the assembled payload) before any irreversible call.
+   In current Dify this is a pause/trigger pattern or an approval step before
+   the workflow proceeds; at minimum, write as `Draft` status when the target
+   system supports it.
+3. **Read back and verify.** After writing, read the record back and compare
+   key fields before declaring success; a 200 response is not proof of the
+   intended state.
+4. **Validate before you build.** Parse/validate user input (JSON schema,
+   required fields) *before* assembling the write payload, and reject early
+   with a reason the user can act on.
+5. **Return the foreign key.** The `end.outputs` should include the created
+   record's ID (e.g. `docname` from an ERPNext-style API) so operators can
+   trace the result even when later steps fail.
+
+This pattern composes with template 3 (Agent) when preparation needs tools,
+and with `database-tools.md` when the write target is SQL (keep writes
+parameterized; prefer draft/staging tables).

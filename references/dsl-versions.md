@@ -25,6 +25,36 @@ sanitization), see `official-target.md`.
 | `0.6.x` | superseded | observational; public corpus has very few samples | no |
 | `0.5.x` | superseded | no upstream source verification; legacy only | no |
 
+## Dify release ↔ DSL version mapping (verified)
+
+Checked against `api/constants/dsl_version.py` at each release tag (2026-09-09):
+
+| Dify release | `CURRENT_APP_DSL_VERSION` | Note |
+| --- | --- | --- |
+| 1.16.0, 1.17.x | `0.7.0` | bumped in #38849 (new Agent DSL import/export), 2026-07-15 |
+| ≤ 1.15.x (incl. 1.14.x) | `0.6.0` | `0.7.0` files are *newer-than-current* here → import asks for confirmation/migration |
+
+Rules that follow from this mapping:
+
+- Confirm the **server version** before choosing `0.7.0` for self-hosted targets.
+  For Dify ≤ 1.15, generate `version: "0.6.0"` unless the user accepts the
+  newer-version import prompt.
+- The mapping above is a snapshot. Re-verify before trusting it for a newer
+  release (protocol below).
+
+## Re-verification protocol
+
+When a new Dify release lands (or before trusting this file after a long gap):
+
+1. Fetch the constant at the new tag:
+   `curl -sL https://raw.githubusercontent.com/langgenius/dify/<TAG>/api/constants/dsl_version.py`
+   and update the mapping table above with the date.
+2. Skim the release notes for DSL/workflow export changes (search for `DSL`,
+   `export`, `workflow graph`).
+3. Optionally smoke-test: import `examples/*.yml` into a workspace running that
+   tag and record any import errors into `references/import-troubleshooting.md`.
+
+
 ## 0.7.x (default)
 
 - `version: "0.7.0"`.

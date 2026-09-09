@@ -30,12 +30,18 @@ Rights Reserved 的基础技能部分。
 
 - **节点路由表**:SKILL.md 内置 15 行快速选型表,按用途映射节点 `data.type` 与关键字段,
   指向 `references/node-schemas.md` 对应锚点。
-- **常见 Schema 陷阱**:5 条最易导致导入失败的字段形状错误——变量列表形状随节点而异、
+- **常见 Schema 陷阱**:6 条最易导致导入失败的字段形状错误——变量列表形状随节点而异、
   `memory` 仅属于 chatflow 的 LLM、`end.outputs` 与 `code.outputs` 形状不同、迭代需两处设尺寸
-  并遵守子节点接线规则、`output_type` 须匹配真实元素类型。
-- **`references/templates.md`**:4 个可直接导入的骨架模板(chatbot / RAG / agent / translation),
-  含完整节点、边与布局坐标。
-- **多版本支持**:面向 0.5.x / 0.6.x / 0.7.x(默认 0.7.0);见 `references/dsl-versions.md`。
+  并遵守子节点接线规则、`output_type` 须匹配真实元素类型、`dataset_ids` 跨租户失效且
+  `code_language` 必填。
+- **`references/templates.md`**:5 个起步模板——4 个可直接导入的骨架(chatbot / RAG /
+  agent / translation,含完整节点、边与布局坐标),外加面向写操作的**副作用安全模式**
+  (状态分类分流、`unknown` 绝不自动重试、写前人工确认、写后回读核对)。
+- **多版本支持**:面向 0.5.x / 0.6.x / 0.7.x,附实测的 Dify 版本 ↔ DSL 版本映射
+  (DSL `0.7.0` 随 Dify ≥ 1.16.0 发布;≤ 1.15 仍为 `0.6.0`)与升级重验协议;
+  见 `references/dsl-versions.md`。
+- **`references/import-troubleshooting.md`**:Dify 导入/运行报错 → 原因 → 修复的闭环手册,
+  含租户绑定 `dataset_ids`、工作区盘点优先的生成前置规则。
 - **工程化**:`requirements.txt`、由 `validate` GitHub Actions 工作流校验的 `examples/` 语料、
   以及贡献模板。
 - 关键标题与术语增加**中文/英文双语**标注。
