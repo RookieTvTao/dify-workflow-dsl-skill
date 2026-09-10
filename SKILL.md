@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.4.0"
+version: "2.5.0"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -85,6 +85,9 @@ Load only the relevant reference files:
   Dify Marketplace, GitHub plugin repos, `.difypkg` packages, or minimal exports.
 - `references/import-troubleshooting.md` for the import/run error → cause → fix
   loop when the user reports a Dify failure.
+- `references/snippets.md` for Dify 1.15+ workflow snippets: the standalone
+  `kind: snippet` DSL (input fields, virtual-start references, forbidden
+  nodes) and why inserted snippets appear as plain nodes in app DSL.
 - `references/real-world-yml-study.md` for observations from 262 parsed public
   Dify app DSL files, an AI DSL generator project, and representative samples.
   These samples are real-world compatibility evidence, not the target version
@@ -172,6 +175,10 @@ schema in `references/node-schemas.md`. The second column is the `data.type`.
   `type: package` with `plugin_unique_identifier`, or `type: github` with
   `github_plugin_unique_identifier` plus repo/package metadata.
 - `custom-note` nodes are valid canvas annotations and may have empty `data.type`.
+- Dify snippets (1.15+) are reusable node groups exported as a standalone
+  `kind: snippet` DSL — inserting one into a workflow expands plain nodes, so
+  generated app DSL never contains a snippet node. See
+  `references/snippets.md` before generating snippet files.
 - `agent-chat`, `chat`, and `completion` apps may be top-level `model_config`
   apps with no `workflow.graph`; do not force graph rules onto them when reviewing
   legacy exports.

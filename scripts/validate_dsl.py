@@ -30,6 +30,11 @@ SQL_MUTATING_RE = re.compile(r"\b(delete|update)\b", re.IGNORECASE)
 SQL_TRAILING_COMMA_RE = re.compile(r"\([^;]*,\s*\)", re.IGNORECASE | re.DOTALL)
 VAR_REF_RE = re.compile(r"\{\{#([^#{}]+)#\}\}")
 
+# Node types Dify refuses inside snippet workflows (api/services/snippet_service.py).
+SNIPPET_FORBIDDEN_NODE_TYPES = {"start", "human-input", "knowledge-retrieval"}
+# Snippet graphs reference input fields via the virtual start node.
+SNIPPET_VIRTUAL_ROOTS = {"start"}
+
 
 class Report:
     def __init__(self, path: Path) -> None:
@@ -90,12 +95,27 @@ def validate_file(path: Path) -> Report:
     if not isinstance(version, str):
         report.error("Top-level version must be a string, for example version: \"0.7.0\".")
 
-    if document.get("kind") != "app":
-        report.warn("Top-level kind is usually 'app'.")
+    is_snippet = document.get("kind") == "snippet"
+    if not is_snippet and document.get("kind") != "app":
+        report.warn("Top-level kind is usually 'app' (or 'snippet' for workflow snippets).")
+
+    if is_snippet:
+        snippet = as_dict(document.get("snippet"))
+        if not snippet:
+            report.error("kind: snippet requires a top-level 'snippet' block.")
+        else:
+            if not snippet.get("name"):
+                report.error("snippet.name is required.")
+            snippet_type = snippet.get("type")
+            if snippet_type not in (None, "node", "group"):
+                report.warn(f"snippet.type should be 'node' or 'group', got {snippet_type!r}.")
+            for field in as_list(snippet.get("input_fields")):
+                if isinstance(field, dict) and not field.get("variable"):
+                    report.warn(f"snippet input field missing 'variable': {field.get('label') or field!r}")
 
     app = as_dict(document.get("app"))
     mode = app.get("mode")
-    if mode not in SUPPORTED_MODES:
+    if not is_snippet and mode not in SUPPORTED_MODES:
         report.error(f"app.mode is missing or unsupported: {mode!r}.")
 
     workflow = as_dict(document.get("workflow"))
@@ -103,7 +123,7 @@ def validate_file(path: Path) -> Report:
     nodes = as_list(graph.get("nodes"))
     edges = as_list(graph.get("edges"))
 
-    if mode in GRAPH_MODES:
+    if is_snippet or mode in GRAPH_MODES:
         if not nodes:
             report.error("workflow.graph.nodes is missing or empty.")
         if "edges" not in graph:
@@ -135,6 +155,11 @@ def validate_file(path: Path) -> Report:
         node_type_by_id[node_id] = node_type
         if wrapper_type not in {None, "custom", "custom-iteration-start", "custom-loop-start", "custom-note"}:
             report.warn(f"Node {node_id} wrapper type is unusual: {wrapper_type!r}.")
+        if is_snippet and node_type in SNIPPET_FORBIDDEN_NODE_TYPES:
+            report.error(
+                f"Snippet graph cannot contain a '{node_type}' node ({node_id}); "
+                "Dify import rejects it."
+            )
 
         validate_node(report, node_id, data)
 
@@ -187,7 +212,7 @@ def validate_file(path: Path) -> Report:
 
     validate_variables(report, workflow)
     validate_dependencies(report, document)
-    validate_references(report, document, set(node_by_id))
+    validate_references(report, document, set(node_by_id) | (SNIPPET_VIRTUAL_ROOTS if is_snippet else set()))
     return report
 
 

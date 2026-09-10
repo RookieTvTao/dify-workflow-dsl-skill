@@ -76,6 +76,9 @@ On top of yzmw123's original (all `references/` and the validator kept), this ve
 - Generate agent nodes (`langgenius/agent` `function_calling` / `ReAct`, plus
   third-party strategies via their declarations) in both `workflow` and
   `advanced-chat`.
+- Generate standalone workflow-snippet DSL (Dify 1.15+): input fields,
+  virtual-start references, forbidden-node rules; know that inserted snippets
+  expand to plain nodes in app DSL (`references/snippets.md`).
 - Build database read/write workflows, including `spance/db_client_node` and
   `hjlarry/database` patterns.
 - Review existing DSL for import risks and behavioral bugs.
@@ -179,6 +182,7 @@ trailing commas in `INSERT` column lists.
 │   ├── official-target.md
 │   ├── plugin-marketplace-tools.md
 │   ├── real-world-yml-study.md
+│   ├── snippets.md          # ← workflow snippets (kind: snippet DSL)
 │   ├── templates.md        # ← 4 skeletons + side-effect safety pattern
 │   └── usecase-node-selection.md
 ├── scripts/

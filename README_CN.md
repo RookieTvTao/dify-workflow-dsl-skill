@@ -47,6 +47,9 @@ Rights Reserved 的基础技能部分。
   见 `references/plugin-marketplace-tools.md`。
 - **Agent 节点生成**:支持官方 `langgenius/agent` 的 `function_calling` / `ReAct`
   策略与第三方策略(按声明生成),workflow 与 chatflow 均可。
+- **工作流片段(Dify 1.15+)**:生成独立的 `kind: snippet` DSL——输入字段、
+  虚拟 start 引用、禁用节点规则;并明确插入的片段在 app DSL 中以普通节点展开
+  (`references/snippets.md`)。
 - **工程化**:`requirements.txt`、由 `validate` GitHub Actions 工作流校验的 `examples/` 语料、
   以及贡献模板。
 - 关键标题与术语增加**中文/英文双语**标注。
