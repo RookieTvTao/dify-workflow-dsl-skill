@@ -534,26 +534,63 @@ selected: false
 
 Use only when the target Dify version supports knowledge indexing in workflows.
 
-## human-input / human-feedback
+## human-input
+
+Verified against Dify 1.16.1 source (`web/app/components/workflow/nodes/human-input/`).
+Older releases used a different `human-feedback` shape — copy an export when
+targeting them.
 
 ```yaml
 title: "人工确认"
 type: human-input
-variables:
-  - label: "是否继续"
-    variable: approved
-    type: select
-    required: true
-    options:
-      - label: "继续"
-        value: "yes"
-      - label: "停止"
-        value: "no"
+desc: ""
+form_content: "请审核日报草稿：可直接修改下方文本后确认；如需退回，填写审核意见。"
+inputs:
+  - output_variable_name: revised_report
+    type: paragraph
+    default:
+      type: variable
+      selector: ["1740000007001", "output"]
+      value: ""
+  - output_variable_name: review_comment
+    type: paragraph
+    default:
+      type: constant
+      selector: []
+      value: ""
+user_actions:
+  - id: approve
+    title: "确认发布"
+    button_style: primary
+  - id: reject
+    title: "退回修改"
+    button_style: default
+timeout: 24
+timeout_unit: hour
+delivery_methods:
+  - id: dm-webapp
+    type: webapp
+    enabled: true
 selected: false
 ```
 
-These nodes are version-sensitive. Prefer copying an export from the target Dify
-workspace for production DSL.
+- `inputs[]` are form fields: `paragraph` (default), `select` (with
+  `option_source`), `single-file`, `multi-files`. Each has an
+  `output_variable_name` referenced downstream as
+  `["<node_id>", "<output_variable_name>"]`. A field's `default` can be
+  `type: variable` with a selector — use it to pre-fill a draft for in-place
+  editing.
+- `user_actions[]` (`id`/`title`/`button_style`: primary | default | accent |
+  ghost) become branch exits: each action `id` is a `sourceHandle` on outgoing
+  edges (like if-else case IDs).
+- Timeout is native: `timeout` + `timeout_unit` (`hour` | `day`), with a
+  dedicated `__timeout` source handle for the expiry branch.
+- `delivery_methods[]`: `webapp` works out of the box; `email` requires
+  subject/body containing `{{#url#}}` plus recipients (workspace members or
+  external emails); slack/teams/discord need workspace integration.
+- The node pauses the run, collects the form + clicked action, then resumes —
+  it works in both `workflow` and `advanced-chat` (it is forbidden inside
+  snippets and cannot be an iteration/loop exit source).
 
 ## trigger-schedule
 

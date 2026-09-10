@@ -28,7 +28,7 @@ Rights Reserved 的基础技能部分。
 
 在 yzmw123 原版基础上(保留全部 `references/` 与校验脚本),新增:
 
-- **节点路由表**:SKILL.md 内置 16 行快速选型表,按用途映射节点 `data.type` 与关键字段,
+- **节点路由表**:SKILL.md 内置 17 行快速选型表,按用途映射节点 `data.type` 与关键字段,
   指向 `references/node-schemas.md` 对应锚点。
 - **常见 Schema 陷阱**:6 条最易导致导入失败的字段形状错误——变量列表形状随节点而异、
   `memory` 仅属于 chatflow 的 LLM、`end.outputs` 与 `code.outputs` 形状不同、迭代需两处设尺寸

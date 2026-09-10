@@ -32,7 +32,7 @@ All-Rights-Reserved base.
 
 On top of yzmw123's original (all `references/` and the validator kept), this version adds:
 
-- **Node Routing Table**: a 16-row quick-pick table in SKILL.md mapping each use case
+- **Node Routing Table**: a 17-row quick-pick table in SKILL.md mapping each use case
   to a node `data.type` and its key fields, pointing into `references/node-schemas.md`.
 - **Schema Pitfalls**: the 6 field-shape mistakes most likely to break import —
   variable-list shape differs by node, `memory` is chatflow-only, `end.outputs` vs

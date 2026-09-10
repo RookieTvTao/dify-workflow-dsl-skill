@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.5.2"
+version: "2.5.3"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -118,6 +118,7 @@ schema in `references/node-schemas.md`. The second column is the `data.type`.
 | Question Classifier / 问题分类 | `question-classifier` | LLM-classify the input | `query_variable_selector`, `model`, `classes` | `node-schemas.md#question-classifier` |
 | Parameter Extractor / 参数提取 | `parameter-extractor` | LLM-extract structured params | `query`, `model`, `parameters` | `node-schemas.md#parameter-extractor` |
 | Agent / 智能体 | `agent` | autonomous LLM + tools loop via a strategy plugin | `agent_strategy_provider_name`, `agent_strategy_name`, `agent_parameters` | `node-schemas.md#agent` |
+| Human Input / 人工输入 | `human-input` | pause for human review; action buttons branch (plus native `__timeout`) | `form_content`, `inputs`, `user_actions`, `timeout` | `node-schemas.md#human-input` |
 | Tool / 工具 | `tool` | call an external tool (builtin/api/mcp/workflow) | `provider_id`, `provider_type`, `tool_name`, `tool_parameters` | `node-schemas.md#tool` |
 
 ## Required Decisions
