@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.5.1"
+version: "2.5.2"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -235,10 +235,13 @@ Authoring Rules; cross-check there too.
    File **arrays** are safe: they arrive as `[File.to_dict(), ...]` dicts.
    To branch on file type, extract an array-level metadata list in one code
    node (`kinds`, `names` from `["start", "files"]`), then inside the
-   iteration read `["iter_id", "index"]` (written by the engine) to pick the
-   current entry. File bodies go only to vision selectors and
-   document-extractor selectors. if-else supports only `exists` /
-   `not exists` on file variables.
+   iteration read `["iter_id", "index"]` to pick the current entry — but
+   `index` is not populated in every deployment (tested: arrived as `None`
+   and broke the code node), so for cross-version portability prefer
+   per-type inputs (`images` / `documents` file-lists with
+   `allowed_file_types`) feeding separate iterations. File bodies go only to
+   vision selectors and document-extractor selectors. if-else supports only
+   `exists` / `not exists` on file variables.
 
 ## Validation Checklist
 

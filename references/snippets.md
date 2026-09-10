@@ -66,9 +66,13 @@ Rules:
 - `input_fields` use the start-variable field set (`variable`, `label`, `type`,
   `required`, `max_length`, `options`, `default`, `placeholder`, `hint`).
   For `file` / `file-list` inputs also declare the upload settings explicitly —
-  import does not default them and the type checkboxes arrive unticked
-  (tested): `allowed_file_types: [image, document]`,
-  `allowed_upload_methods: [local_file, remote_url]`, `number_limits: 10`.
+  import does not default them and the type/method checkboxes and max count
+  arrive empty (tested): `allowed_file_types: [image, document]`,
+  `allowed_file_upload_methods: [local_file, remote_url]`, `max_length: 10`.
+  The UI reads `allowed_file_upload_methods` and `max_length`
+  (`file-upload-setting.tsx`); the `allowed_upload_methods` / `number_limits`
+  aliases are not picked up on import, and with the settings empty the
+  debug-run panel renders no upload entry at all.
 - Inside the graph, reference inputs via the **virtual start node**:
   selector `["start", "<field>"]`, interpolation `{{#start.<field>#}}`. The
   backend injects a runtime start node (`__snippet_virtual_start__`, with
