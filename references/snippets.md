@@ -65,6 +65,10 @@ Rules:
 - `snippet.type` must be `node` or `group`.
 - `input_fields` use the start-variable field set (`variable`, `label`, `type`,
   `required`, `max_length`, `options`, `default`, `placeholder`, `hint`).
+  For `file` / `file-list` inputs also declare the upload settings explicitly —
+  import does not default them and the type checkboxes arrive unticked
+  (tested): `allowed_file_types: [image, document]`,
+  `allowed_upload_methods: [local_file, remote_url]`, `number_limits: 10`.
 - Inside the graph, reference inputs via the **virtual start node**:
   selector `["start", "<field>"]`, interpolation `{{#start.<field>#}}`. The
   backend injects a runtime start node (`__snippet_virtual_start__`, with

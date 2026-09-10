@@ -1,6 +1,6 @@
 ---
 name: dify-workflow-dsl
-version: "2.5.0"
+version: "2.5.1"
 description: >
   Use when creating, modifying, reviewing, or debugging Dify Workflow/Chatflow
   DSL YAML files for import into Dify. Covers app DSL, workflow and advanced-chat
@@ -226,6 +226,19 @@ Authoring Rules; cross-check there too.
    instead of promising a working RAG node. Never hand-craft dataset IDs. Code
    nodes must set `code_language: python3` (or `javascript`); a missing
    `code_language` breaks the node even when `code` is present.
+7. **Code nodes cannot take a single File variable; if-else cannot test file type. / 代码节点不能吃单个 File；if-else 判不了文件类型。**
+   Passing an iteration item (`["iter_id", "item"]`) or any single file
+   selector into a code node fails at runtime with
+   `Type is not JSON serializable: File` — the sandbox JSON-serializes
+   arguments and single-file segments hand over the raw `File` object
+   (verified in graphon `segments.py`: `FileSegment` has no `to_object`).
+   File **arrays** are safe: they arrive as `[File.to_dict(), ...]` dicts.
+   To branch on file type, extract an array-level metadata list in one code
+   node (`kinds`, `names` from `["start", "files"]`), then inside the
+   iteration read `["iter_id", "index"]` (written by the engine) to pick the
+   current entry. File bodies go only to vision selectors and
+   document-extractor selectors. if-else supports only `exists` /
+   `not exists` on file variables.
 
 ## Validation Checklist
 
