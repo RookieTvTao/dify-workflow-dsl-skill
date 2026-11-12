@@ -137,6 +137,11 @@ selected: false
 
 Branch edge `sourceHandle` must equal the target case ID.
 
+`value` must always be a **string**, including numeric comparisons —
+`value: "1"` with `varType: number`. An int value passes backend import but
+crashes the editor canvas with `TypeError: m.replace is not a function`
+(tested, Dify 1.16.1).
+
 Common comparison operators: `contains`, `not contains`, `is`, `is not`, `empty`,
 `not empty`, `start with`, `end with`, `=`, `≠`, `>`, `<`, `≥`, `≤`.
 

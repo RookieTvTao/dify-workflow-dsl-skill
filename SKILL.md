@@ -243,6 +243,20 @@ Authoring Rules; cross-check there too.
    `allowed_file_types`) feeding separate iterations. File bodies go only to
    vision selectors and document-extractor selectors. if-else supports only
    `exists` / `not exists` on file variables.
+9. **Condition `value` is always a string, even for numeric comparisons. / 条件 value 必须是字符串。**
+   `value: 1` (int) passes backend import — the import flow is type-tolerant — but the
+   workflow editor canvas crashes with `TypeError: m.replace is not a function` while
+   rendering the condition chip, and the app becomes un-editable (tested, Dify 1.16.1).
+   Always quote: `value: "1"` with `varType: number`. Generalize: when in doubt about a
+   field's type, copy it verbatim from a real export — the frontend renders against the
+   exported shape, not a tolerant schema.
+10. **LLM vision does not accept `array[file]` for multi-image input. / LLM vision 吃不了多图数组。**
+    Selecting a start `file-list` variable directly as the LLM vision
+    `variable_selector` is unsupported in the editor (Dify 1.16.x); pass a single file
+    per LLM call instead — the standard pattern is an `iteration` node over the
+    file-list with the child LLM's vision selector bound to `["<iteration_id>", "item"]`
+    (a single File is a legal vision selector), then aggregate per-image outputs in a
+    following code node or a text-merging LLM (tested design on 1.16.1).
 
 ## Validation Checklist
 
