@@ -257,6 +257,15 @@ Authoring Rules; cross-check there too.
     file-list with the child LLM's vision selector bound to `["<iteration_id>", "item"]`
     (a single File is a legal vision selector), then aggregate per-image outputs in a
     following code node or a text-merging LLM (tested design on 1.16.1).
+11. **Iteration container wrapper is `custom`, not `custom-iteration`. / 迭代容器 wrapper 是 custom。**
+    The editor's React Flow `nodeTypes` registry (1.16.1) has no `custom-iteration`
+    key; a container with that wrapper falls back to the default renderer and shows
+    a collapsed ~150×21 white bar with children floating outside (tested, Dify
+    1.16.1). Container: wrapper `type: custom` + `data.type: iteration` +
+    `data._children` + `data.flatten_output` + width/height in both `data` and the
+    node. Only the helper keeps `custom-iteration-start`. Also: never put
+    `parentId` on edges — it is not in the edge schema. Full shape in
+    `references/node-schemas.md#iteration`.
 
 ## Validation Checklist
 

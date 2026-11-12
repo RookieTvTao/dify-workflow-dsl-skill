@@ -486,6 +486,46 @@ selected: false
 Exported Dify graphs also include an `iteration-start` helper node with wrapper
 `type: custom-iteration-start` and internal child nodes marked `isInIteration`.
 
+**Container wrapper shape (tested on Dify 1.16.1):** the iteration container
+node itself uses wrapper `type: custom` — NOT `custom-iteration`. The 1.16.1
+editor's React Flow `nodeTypes` registry only contains `custom`,
+`custom-note`, `custom-simple`, `custom-iteration-start`, `custom-loop-start`,
+and `custom-data-source-empty`; an unregistered wrapper type falls back to the
+default renderer and shows a collapsed 150×21 white bar with children floating
+outside the frame. Some pre-1.16 public exports carry `type: custom-iteration`
+on the container — do not copy it for new DSL targeting 1.16.x. A working
+container node:
+
+```yaml
+- id: "iter_1"
+  type: custom                 # wrapper: plain custom (registry key)
+  parentId: null
+  zIndex: 1001
+  width: 420                   # container size in BOTH places
+  height: 220
+  data:
+    type: iteration            # real node kind drives the container UI
+    title: "迭代"
+    iterator_selector: ["start_1", "images"]
+    output_selector: ["child_llm", "text"]
+    output_type: array[string]
+    is_parallel: false
+    parallel_nums: 10
+    start_node_id: "iter_start_helper"
+    error_handle_mode: terminated
+    flatten_output: true
+    _children:                 # frontend renders child blocks from this list
+      - { nodeId: child_llm, nodeType: llm }
+    width: 420
+    height: 220
+    selected: false
+```
+
+Children carry `parentId: <container id>`, `extent: parent`, relative
+`position`, `zIndex: 1002`, and `data.isInIteration: true` +
+`data.iteration_id`. Do NOT put `parentId` on edges — it is not part of the
+edge schema and real exports omit it.
+
 ## loop
 
 ```yaml
